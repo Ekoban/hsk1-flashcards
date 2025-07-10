@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, Target, Settings, X, Filter, LogOut, User } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Target, Settings, X, Filter, LogOut } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { saveUserProgress, getUserProgress, saveUserSettings, getUserSettings } from '../services/dataService';
 import hsk1Words from '../data/hsk1-words.json';
