@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, Target, Settings, X, Filter, LogOut } from 'lucide-react';
+import confetti from 'canvas-confetti';
 import { useAuth } from '../contexts/AuthContext';
 import { saveUserProgress, getUserProgress, saveUserSettings, getUserSettings } from '../services/dataService';
 import hsk1Words from '../data/hsk1-words.json';
@@ -304,12 +305,25 @@ const HSK1FlashcardApp = () => {
     setSessionStats({ correct: 0, incorrect: 0 });
   };
 
+  // Confetti celebration for learning milestones
+  const celebrateWordLearned = () => {
+    confetti({
+      particleCount: 100,
+      spread: 70,
+      origin: { y: 0.6 },
+      colors: ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6'],
+      shapes: ['star', 'circle'],
+      scalar: 1.2,
+    });
+  };
+
   // Handle card response
   const handleCardResponse = (isCorrect: boolean) => {
     const currentWord = currentSession[currentCardIndex];
     if (!currentWord) return;
     
     const now = Date.now();
+    let wordBecameLearned = false;
     
     setWordStates(prev => prev.map(word => {
       if (word.id === currentWord.id) {
@@ -318,9 +332,15 @@ const HSK1FlashcardApp = () => {
         
         if (isCorrect) {
           updated.correctCount++;
+          const oldLevel = updated.level;
           updated.level = Math.min(updated.level + 1, 3);
           // Increase interval: 1 day -> 3 days -> 7 days -> 14 days
           updated.interval = Math.min(updated.interval * 2.5, 14);
+          
+          // Check if word just became learned (reached level 2 or 3)
+          if (oldLevel < 2 && updated.level >= 2) {
+            wordBecameLearned = true;
+          }
         } else {
           updated.incorrectCount++;
           updated.level = Math.max(updated.level - 1, 0);
@@ -332,6 +352,11 @@ const HSK1FlashcardApp = () => {
       }
       return word;
     }));
+    
+    // Celebrate when a word becomes learned!
+    if (wordBecameLearned) {
+      celebrateWordLearned();
+    }
     
     setSessionStats(prev => ({
       correct: prev.correct + (isCorrect ? 1 : 0),
