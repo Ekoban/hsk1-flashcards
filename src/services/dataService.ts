@@ -1,0 +1,163 @@
+import { 
+  doc, 
+  setDoc, 
+  getDoc, 
+  updateDoc,
+  serverTimestamp 
+} from 'firebase/firestore';
+import { db } from '../firebase';
+
+export interface WordState {
+  id: number;
+  chinese: string;
+  pinyin: string;
+  ipa?: string;
+  english: string;
+  french?: string;
+  difficulty: number;
+  usageFrequency?: number;
+  category?: string;
+  strokeCount?: number;
+  level: number;
+  correctCount: number;
+  incorrectCount: number;
+  lastReviewed: number | null;
+  nextReview: number;
+  interval: number;
+}
+
+export interface SessionSettings {
+  sessionSize: number;
+  difficulties: number[];
+  categories: string[];
+  levels: number[];
+  includeNew: boolean;
+  includeLearning: boolean;
+  includeReview: boolean;
+  includeMastered: boolean;
+  strokeCountRange: [number, number];
+}
+
+export interface UserProfile {
+  uid: string;
+  email: string;
+  displayName: string;
+  createdAt: any;
+  lastLoginAt: any;
+}
+
+// User Profile Operations
+export const createUserProfile = async (user: any): Promise<void> => {
+  try {
+    const userRef = doc(db, 'users', user.uid);
+    const userSnap = await getDoc(userRef);
+    
+    if (!userSnap.exists()) {
+      await setDoc(userRef, {
+        uid: user.uid,
+        email: user.email,
+        displayName: user.displayName,
+        createdAt: serverTimestamp(),
+        lastLoginAt: serverTimestamp()
+      });
+    } else {
+      // Update last login
+      await updateDoc(userRef, {
+        lastLoginAt: serverTimestamp()
+      });
+    }
+  } catch (error) {
+    console.error('Error creating user profile:', error);
+  }
+};
+
+// Progress Operations
+export const saveUserProgress = async (userId: string, wordStates: WordState[]): Promise<void> => {
+  try {
+    const progressRef = doc(db, 'userProgress', userId);
+    const progressData = wordStates.reduce((acc, word) => {
+      acc[word.id] = {
+        level: word.level,
+        correctCount: word.correctCount,
+        incorrectCount: word.incorrectCount,
+        lastReviewed: word.lastReviewed,
+        nextReview: word.nextReview,
+        interval: word.interval
+      };
+      return acc;
+    }, {} as Record<number, any>);
+
+    await setDoc(progressRef, { words: progressData }, { merge: true });
+  } catch (error) {
+    console.error('Error saving user progress:', error);
+  }
+};
+
+export const getUserProgress = async (userId: string): Promise<Record<number, any> | null> => {
+  try {
+    const progressRef = doc(db, 'userProgress', userId);
+    const progressSnap = await getDoc(progressRef);
+    
+    if (progressSnap.exists()) {
+      return progressSnap.data().words || {};
+    }
+    return null;
+  } catch (error) {
+    console.error('Error getting user progress:', error);
+    return null;
+  }
+};
+
+// Settings Operations
+export const saveUserSettings = async (userId: string, settings: SessionSettings): Promise<void> => {
+  try {
+    const settingsRef = doc(db, 'userSettings', userId);
+    await setDoc(settingsRef, settings);
+  } catch (error) {
+    console.error('Error saving user settings:', error);
+  }
+};
+
+export const getUserSettings = async (userId: string): Promise<SessionSettings | null> => {
+  try {
+    const settingsRef = doc(db, 'userSettings', userId);
+    const settingsSnap = await getDoc(settingsRef);
+    
+    if (settingsSnap.exists()) {
+      return settingsSnap.data() as SessionSettings;
+    }
+    return null;
+  } catch (error) {
+    console.error('Error getting user settings:', error);
+    return null;
+  }
+};
+
+// Migration helper to import localStorage data
+export const migrateLocalStorageData = async (userId: string): Promise<void> => {
+  try {
+    // Check if user already has cloud data
+    const existingProgress = await getUserProgress(userId);
+    if (existingProgress && Object.keys(existingProgress).length > 0) {
+      return; // Don't overwrite existing cloud data
+    }
+
+    // Import localStorage progress
+    const localProgress = localStorage.getItem('hsk1-progress');
+    if (localProgress) {
+      const wordStates = JSON.parse(localProgress) as WordState[];
+      await saveUserProgress(userId, wordStates);
+      console.log('Successfully migrated progress data to cloud');
+    }
+
+    // Import localStorage settings
+    const localSettings = localStorage.getItem('hsk1-session-settings');
+    if (localSettings) {
+      const settings = JSON.parse(localSettings) as SessionSettings;
+      await saveUserSettings(userId, settings);
+      console.log('Successfully migrated settings data to cloud');
+    }
+  } catch (error) {
+    console.error('Error migrating localStorage data:', error);
+  }
+};
