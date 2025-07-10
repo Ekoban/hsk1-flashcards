@@ -430,10 +430,15 @@ const HSK1FlashcardApp = () => {
 
   if (isLoadingData) {
     return (
-      <div className="max-w-md mx-auto p-6 bg-white min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading your progress...</p>
+      <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50">
+        <div className="max-w-md mx-auto p-6 flex items-center justify-center min-h-screen">
+          <div className="text-center">
+            <div className="w-16 h-16 relative mx-auto mb-6">
+              <div className="w-16 h-16 border-4 border-gradient-to-r from-indigo-400 to-purple-400 border-t-transparent rounded-full animate-spin"></div>
+              <div className="absolute inset-0 w-16 h-16 border-4 border-gradient-to-r from-purple-400 to-pink-400 border-t-transparent rounded-full animate-spin opacity-30" style={{animationDelay: '0.3s'}}></div>
+            </div>
+            <p className="text-gray-700 font-medium">Loading your progress...</p>
+          </div>
         </div>
       </div>
     );
@@ -441,95 +446,98 @@ const HSK1FlashcardApp = () => {
 
   if (currentSession.length === 0) {
     return (
-      <div className="max-w-md mx-auto p-6 bg-white min-h-screen">
-        {/* User Header */}
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center text-white font-semibold">
-              {currentUser?.displayName?.charAt(0) || '?'}
+      <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50">
+        <div className="max-w-md mx-auto p-6">
+          {/* User Header */}
+          <div className="flex items-center justify-between mb-8 bg-white/80 backdrop-blur-sm rounded-2xl p-4 shadow-sm border border-white/20">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center text-white font-bold text-lg shadow-lg">
+                {currentUser?.displayName?.charAt(0) || '?'}
+              </div>
+              <div>
+                <div className="font-semibold text-gray-800">{currentUser?.displayName || 'User'}</div>
+                <div className="text-sm text-gray-500">Welcome back! 👋</div>
+              </div>
             </div>
-            <div>
-              <div className="font-medium text-gray-800">{currentUser?.displayName || 'User'}</div>
-              <div className="text-sm text-gray-500">Welcome back!</div>
+            <button
+              onClick={logout}
+              className="p-2.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100/80 rounded-xl transition-all duration-200 hover:scale-105"
+              title="Sign out"
+            >
+              <LogOut className="w-5 h-5" />
+            </button>
+          </div>
+
+          {/* Header */}
+          <div className="text-center mb-8">
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent mb-3">
+              HSK1 学习
+            </h1>
+            <p className="text-gray-600 text-lg">Master 500 essential Chinese words</p>
+          </div>
+
+          {/* Enhanced Statistics Dashboard */}
+          <div className="grid grid-cols-2 gap-4 mb-6">
+            <button
+              onClick={() => showWordsForCategory('mastered')}
+              className="bg-gradient-to-br from-emerald-400 to-teal-500 p-5 rounded-2xl text-center hover:from-emerald-500 hover:to-teal-600 transition-all duration-300 cursor-pointer shadow-lg hover:shadow-xl transform hover:-translate-y-1 text-white"
+              title="Click to view mastered words"
+            >
+              <div className="text-3xl font-bold">{stats.mastered}</div>
+              <div className="text-sm font-medium opacity-90">Mastered</div>
+            </button>
+            <button
+              onClick={() => showWordsForCategory('learning')}
+              className="bg-gradient-to-br from-blue-400 to-indigo-500 p-5 rounded-2xl text-center hover:from-blue-500 hover:to-indigo-600 transition-all duration-300 cursor-pointer shadow-lg hover:shadow-xl transform hover:-translate-y-1 text-white"
+              title="Click to view learning words"
+            >
+              <div className="text-3xl font-bold">{stats.learning + stats.review}</div>
+              <div className="text-sm font-medium opacity-90">Learning</div>
+            </button>
+            <button
+              onClick={() => showWordsForCategory('new')}
+              className="bg-gradient-to-br from-amber-400 to-orange-500 p-5 rounded-2xl text-center hover:from-amber-500 hover:to-orange-600 transition-all duration-300 cursor-pointer shadow-lg hover:shadow-xl transform hover:-translate-y-1 text-white"
+              title="Click to view new words"
+            >
+              <div className="text-3xl font-bold">{stats.new}</div>
+              <div className="text-sm font-medium opacity-90">New</div>
+            </button>
+            <div className="bg-gradient-to-br from-pink-400 to-rose-500 p-5 rounded-2xl text-center shadow-lg text-white">
+              <div className="text-3xl font-bold">{stats.studyStreak}</div>
+              <div className="text-sm font-medium opacity-90">Day Streak 🔥</div>
             </div>
-          </div>
-          <button
-            onClick={logout}
-            className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
-            title="Sign out"
-          >
-            <LogOut className="w-5 h-5" />
-          </button>
         </div>
 
-        {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-800 mb-2">HSK1 学习</h1>
-          <p className="text-gray-600">Master 500 essential Chinese words</p>
-        </div>
-
-        {/* Enhanced Statistics Dashboard */}
-        <div className="grid grid-cols-2 gap-4 mb-6">
-          <button
-            onClick={() => showWordsForCategory('mastered')}
-            className="bg-blue-50 p-4 rounded-lg text-center hover:bg-blue-100 transition-colors cursor-pointer border border-transparent hover:border-blue-200"
-            title="Click to view mastered words"
-          >
-            <div className="text-2xl font-bold text-blue-600">{stats.mastered}</div>
-            <div className="text-sm text-blue-700">Mastered</div>
-          </button>
-          <button
-            onClick={() => showWordsForCategory('learning')}
-            className="bg-green-50 p-4 rounded-lg text-center hover:bg-green-100 transition-colors cursor-pointer border border-transparent hover:border-green-200"
-            title="Click to view learning words"
-          >
-            <div className="text-2xl font-bold text-green-600">{stats.learning + stats.review}</div>
-            <div className="text-sm text-green-700">Learning</div>
-          </button>
-          <button
-            onClick={() => showWordsForCategory('new')}
-            className="bg-yellow-50 p-4 rounded-lg text-center hover:bg-yellow-100 transition-colors cursor-pointer border border-transparent hover:border-yellow-200"
-            title="Click to view new words"
-          >
-            <div className="text-2xl font-bold text-yellow-600">{stats.new}</div>
-            <div className="text-sm text-yellow-700">New</div>
-          </button>
-          <div className="bg-orange-50 p-4 rounded-lg text-center border border-transparent">
-            <div className="text-2xl font-bold text-orange-600">{stats.studyStreak}</div>
-            <div className="text-sm text-orange-700">Day Streak 🔥</div>
-          </div>
-        </div>
-
-        <p className="text-xs text-gray-500 text-center mb-6">Click on cards above to view word lists</p>
+        <p className="text-xs text-gray-500 text-center mb-8">✨ Click on cards above to view word lists</p>
 
         {/* Difficulty Breakdown */}
-        <div className="mb-6">
-          <h3 className="text-lg font-semibold text-gray-700 mb-3">Progress by Difficulty</h3>
+        <div className="mb-6 bg-white/60 backdrop-blur-sm rounded-2xl p-6 shadow-sm border border-white/20">
+          <h3 className="text-lg font-semibold text-gray-800 mb-4">Progress by Difficulty</h3>
           <div className="grid grid-cols-3 gap-3">
-            <div className="bg-gray-50 p-3 rounded text-center">
-              <div className="text-lg font-bold text-green-600">{stats.basic}</div>
-              <div className="text-xs text-gray-600">Basic (Diff 1)</div>
+            <div className="bg-gradient-to-br from-green-100 to-emerald-100 p-4 rounded-xl text-center border border-green-200/50">
+              <div className="text-xl font-bold text-green-700">{stats.basic}</div>
+              <div className="text-xs text-green-600 font-medium">Basic (Diff 1)</div>
             </div>
-            <div className="bg-gray-50 p-3 rounded text-center">
-              <div className="text-lg font-bold text-yellow-600">{stats.intermediate}</div>
-              <div className="text-xs text-gray-600">Intermediate (Diff 2)</div>
+            <div className="bg-gradient-to-br from-yellow-100 to-amber-100 p-4 rounded-xl text-center border border-yellow-200/50">
+              <div className="text-xl font-bold text-yellow-700">{stats.intermediate}</div>
+              <div className="text-xs text-yellow-600 font-medium">Intermediate (Diff 2)</div>
             </div>
-            <div className="bg-gray-50 p-3 rounded text-center">
-              <div className="text-lg font-bold text-red-600">{stats.advanced}</div>
-              <div className="text-xs text-gray-600">Advanced (Diff 3+)</div>
+            <div className="bg-gradient-to-br from-red-100 to-pink-100 p-4 rounded-xl text-center border border-red-200/50">
+              <div className="text-xl font-bold text-red-700">{stats.advanced}</div>
+              <div className="text-xs text-red-600 font-medium">Advanced (Diff 3+)</div>
             </div>
           </div>
         </div>
 
         {/* Category Progress */}
         {stats.categories.length > 0 && (
-          <div className="mb-6">
-            <h3 className="text-lg font-semibold text-gray-700 mb-3">Top Categories Learned</h3>
-            <div className="space-y-2">
+          <div className="mb-6 bg-white/60 backdrop-blur-sm rounded-2xl p-6 shadow-sm border border-white/20">
+            <h3 className="text-lg font-semibold text-gray-800 mb-4">Top Categories Learned</h3>
+            <div className="space-y-3">
               {stats.categories.map(([category, count]) => (
-                <div key={category} className="flex justify-between items-center">
-                  <span className="text-sm capitalize text-gray-600">{category}</span>
-                  <span className="text-sm font-semibold text-blue-600">{String(count)}</span>
+                <div key={category} className="flex justify-between items-center bg-gradient-to-r from-indigo-50 to-purple-50 p-3 rounded-xl border border-indigo-100/50">
+                  <span className="text-sm capitalize text-gray-700 font-medium">{category}</span>
+                  <span className="text-sm font-bold text-indigo-600 bg-indigo-100 px-2 py-1 rounded-lg">{String(count)}</span>
                 </div>
               ))}
             </div>
@@ -537,46 +545,52 @@ const HSK1FlashcardApp = () => {
         )}
 
         {/* Progress Bar */}
-        <div className="mb-8">
-          <div className="flex justify-between text-sm text-gray-600 mb-2">
-            <span>Overall Progress</span>
-            <span>{Math.round((stats.mastered / stats.total) * 100)}%</span>
+        <div className="mb-8 bg-white/60 backdrop-blur-sm rounded-2xl p-6 shadow-sm border border-white/20">
+          <div className="flex justify-between text-sm text-gray-700 mb-3">
+            <span className="font-medium">Overall Progress</span>
+            <span className="font-bold text-indigo-600">{Math.round((stats.mastered / stats.total) * 100)}%</span>
           </div>
-          <div className="w-full bg-gray-200 rounded-full h-3">
+          <div className="w-full bg-gray-200 rounded-full h-4 overflow-hidden">
             <div 
-              className="bg-blue-500 h-3 rounded-full transition-all duration-300"
+              className="bg-gradient-to-r from-indigo-500 to-purple-500 h-4 rounded-full transition-all duration-500 shadow-sm"
               style={{ width: `${(stats.mastered / stats.total) * 100}%` }}
             />
           </div>
         </div>
 
         {/* Start Session Button */}
-        <div className="space-y-3">
+        <div className="space-y-4">
           <button
             onClick={generateSession}
-            className="w-full bg-blue-500 text-white py-4 px-6 rounded-lg font-semibold text-lg hover:bg-blue-600 transition-colors flex items-center justify-center gap-2"
+            className="w-full bg-gradient-to-r from-indigo-500 to-purple-600 text-white py-4 px-6 rounded-2xl font-semibold text-lg hover:from-indigo-600 hover:to-purple-700 transition-all duration-300 flex items-center justify-center gap-3 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
           >
-            <Target className="w-5 h-5" />
+            <Target className="w-6 h-6" />
             Start Study Session
           </button>
           
           <button
             onClick={() => setShowSettings(true)}
-            className="w-full bg-gray-100 text-gray-700 py-3 px-6 rounded-lg font-medium hover:bg-gray-200 transition-colors flex items-center justify-center gap-2"
+            className="w-full bg-white/80 backdrop-blur-sm text-gray-700 py-3 px-6 rounded-2xl font-medium hover:bg-white/90 transition-all duration-300 flex items-center justify-center gap-3 shadow-sm hover:shadow-md border border-white/20"
           >
             <Settings className="w-5 h-5" />
             Customize Session
             {isCustomSettings() && (
-              <span className="ml-2 bg-blue-500 text-white text-xs px-2 py-1 rounded-full">
+              <span className="ml-2 bg-gradient-to-r from-indigo-500 to-purple-500 text-white text-xs px-2 py-1 rounded-full shadow-sm">
                 <Filter className="w-3 h-3" />
               </span>
             )}
           </button>
         </div>
         
-        <p className="text-center text-gray-500 mt-4 text-sm">
-          {stats.studyStreak > 0 ? `🔥 ${stats.studyStreak} day study streak! Keep it up!` : 'Ready to start your journey? 🚀'}
-        </p>
+        <div className="text-center mt-6 bg-gradient-to-r from-indigo-50 to-purple-50 p-4 rounded-2xl border border-indigo-100/50">
+          <p className="text-gray-700 font-medium">
+            {stats.studyStreak > 0 ? `🔥 ${stats.studyStreak} day study streak! Keep it up!` : 'Ready to start your journey? 🚀'}
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+  }
 
         {/* Settings Modal */}
         {showSettings && (
