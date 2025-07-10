@@ -188,7 +188,6 @@ const HSK1FlashcardApp = () => {
 
   // Show word list for a specific category
   const showWordsForCategory = (category: string) => {
-    const now = Date.now();
     let words: WordState[] = [];
     let title = '';
 
@@ -208,10 +207,6 @@ const HSK1FlashcardApp = () => {
       case 'new':
         words = wordStates.filter(w => w.level === 0);
         title = 'New Words';
-        break;
-      case 'dueToday':
-        words = wordStates.filter(w => w.nextReview <= now);
-        title = 'Due Today';
         break;
       default:
         return;
@@ -379,7 +374,43 @@ const HSK1FlashcardApp = () => {
     learning: wordStates.filter(w => w.level === 1).length,
     review: wordStates.filter(w => w.level === 2).length,
     mastered: wordStates.filter(w => w.level === 3).length,
-    dueToday: wordStates.filter(w => w.nextReview <= Date.now()).length,
+    
+    // Calculate study streak (consecutive days with activity)
+    studyStreak: (() => {
+      const today = new Date();
+      const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
+      const oneDayMs = 24 * 60 * 60 * 1000;
+      
+      // Get all unique study dates from word states
+      const studyDates = [...new Set(
+        wordStates
+          .filter(w => w.lastReviewed && w.lastReviewed > 0)
+          .map(w => {
+            const date = new Date(w.lastReviewed!);
+            return new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
+          })
+      )].sort((a, b) => b - a); // Sort descending (most recent first)
+      
+      if (studyDates.length === 0) return 0;
+      
+      let streak = 0;
+      let currentDate = todayStart;
+      
+      for (const studyDate of studyDates) {
+        if (studyDate === currentDate) {
+          streak++;
+          currentDate -= oneDayMs;
+        } else if (studyDate === currentDate + oneDayMs && streak === 0) {
+          // Today hasn't been studied yet, but yesterday was
+          streak++;
+          currentDate = studyDate - oneDayMs;
+        } else {
+          break;
+        }
+      }
+      
+      return streak;
+    })(),
     
     // Difficulty breakdown
     basic: wordStates.filter(w => w.difficulty === 1 && w.level >= 1).length,
@@ -463,14 +494,10 @@ const HSK1FlashcardApp = () => {
             <div className="text-2xl font-bold text-yellow-600">{stats.new}</div>
             <div className="text-sm text-yellow-700">New</div>
           </button>
-          <button
-            onClick={() => showWordsForCategory('dueToday')}
-            className="bg-red-50 p-4 rounded-lg text-center hover:bg-red-100 transition-colors cursor-pointer border border-transparent hover:border-red-200"
-            title="Click to view words due today"
-          >
-            <div className="text-2xl font-bold text-red-600">{stats.dueToday}</div>
-            <div className="text-sm text-red-700">Due Today</div>
-          </button>
+          <div className="bg-orange-50 p-4 rounded-lg text-center border border-transparent">
+            <div className="text-2xl font-bold text-orange-600">{stats.studyStreak}</div>
+            <div className="text-sm text-orange-700">Day Streak 🔥</div>
+          </div>
         </div>
 
         <p className="text-xs text-gray-500 text-center mb-6">Click on cards above to view word lists</p>
@@ -548,7 +575,7 @@ const HSK1FlashcardApp = () => {
         </div>
         
         <p className="text-center text-gray-500 mt-4 text-sm">
-          {stats.dueToday > 0 ? `${stats.dueToday} cards due for review` : 'All caught up! 🎉'}
+          {stats.studyStreak > 0 ? `🔥 ${stats.studyStreak} day study streak! Keep it up!` : 'Ready to start your journey? 🚀'}
         </p>
 
         {/* Settings Modal */}
