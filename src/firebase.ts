@@ -3,15 +3,14 @@ import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 
 // Your web app's Firebase configuration
-// You'll need to replace this with your actual Firebase config
 const firebaseConfig = {
-    apiKey: "AIzaSyC5KpiJ5NZ6eOxOT2yIpLhylr1xpi3gCnI",
-    authDomain: "hsk1-flashcards.firebaseapp.com",
-    projectId: "hsk1-flashcards",
-    storageBucket: "hsk1-flashcards.firebasestorage.app",
-    messagingSenderId: "956281079231",
-    appId: "1:956281079231:web:8477ea554dbd5a82b74d0a",
-    measurementId: "G-PCL3J06LZ7"
+    apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+    authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+    projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+    storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+    messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+    appId: import.meta.env.VITE_FIREBASE_APP_ID,
+    measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
 };
 
 // Initialize Firebase
