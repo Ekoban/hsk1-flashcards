@@ -65,7 +65,7 @@ const LandingPage: React.FC = () => {
             HSK 1
           </h1>
           <h2 className="text-3xl md:text-4xl font-semibold mb-8 text-orange-100">
-            Flashcards
+            3.0 Flashcards Tutor
           </h2>
           <p className="text-xl md:text-2xl text-gray-300 mb-12 max-w-2xl mx-auto leading-relaxed">
             Master 500 essential Chinese words across 40 categories with our intelligent spaced repetition system. 
