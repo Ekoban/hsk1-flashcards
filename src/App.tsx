@@ -2,10 +2,10 @@ import { useEffect } from 'react';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { createUserProfile, migrateLocalStorageData } from './services/dataService';
 import HSK1FlashcardApp from './components/HSK1FlashcardApp';
-import LoginScreen from './components/LoginScreen';
+import LandingPage from './components/LandingPage';
 
 const AppContent = () => {
-  const { currentUser, loading } = useAuth();
+  const { currentUser, loading, isGuestMode } = useAuth();
 
   useEffect(() => {
     const handleUserLogin = async () => {
@@ -23,16 +23,17 @@ const AppContent = () => {
 
   if (loading) {
     return (
-      <div className="max-w-md mx-auto p-6 bg-white min-h-screen flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-orange-900 flex items-center justify-center">
         <div className="text-center">
-          <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading...</p>
+          <div className="w-12 h-12 border-4 border-orange-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-orange-100">Loading...</p>
         </div>
       </div>
     );
   }
 
-  return currentUser ? <HSK1FlashcardApp /> : <LoginScreen />;
+  // Show app if user is logged in OR in guest mode
+  return (currentUser || isGuestMode) ? <HSK1FlashcardApp /> : <LandingPage />;
 };
 
 function App() {

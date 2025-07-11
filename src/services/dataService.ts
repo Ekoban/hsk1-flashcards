@@ -75,7 +75,15 @@ export const createUserProfile = async (user: any): Promise<void> => {
 export const saveUserProgress = async (userId: string, wordStates: WordState[]): Promise<void> => {
   try {
     const progressRef = doc(db, 'userProgress', userId);
-    const progressData = wordStates.reduce((acc, word) => {
+    // Filter out words with invalid IDs before saving
+    const validWords = wordStates.filter(word => 
+      word.id !== undefined && 
+      word.id !== null && 
+      !isNaN(Number(word.id)) && 
+      Number.isInteger(Number(word.id))
+    );
+    
+    const progressData = validWords.reduce((acc, word) => {
       acc[word.id] = {
         level: word.level,
         correctCount: word.correctCount,
@@ -87,6 +95,7 @@ export const saveUserProgress = async (userId: string, wordStates: WordState[]):
       return acc;
     }, {} as Record<number, any>);
 
+    console.log(`Saving ${validWords.length} valid words to Firebase`);
     await setDoc(progressRef, { words: progressData }, { merge: true });
   } catch (error) {
     console.error('Error saving user progress:', error);
@@ -99,7 +108,20 @@ export const getUserProgress = async (userId: string): Promise<Record<number, an
     const progressSnap = await getDoc(progressRef);
     
     if (progressSnap.exists()) {
-      return progressSnap.data().words || {};
+      const data = progressSnap.data();
+      console.log('Raw Firebase document data:', data);
+      console.log('Document data keys:', Object.keys(data));
+      
+      // Handle both new format (nested under 'words') and old format (direct)
+      if (data.words) {
+        console.log('Found data under "words" field');
+        return data.words;
+      } else {
+        console.log('Using direct document structure (legacy format)');
+        // Remove any non-word fields that might exist
+        const { createdAt, lastUpdated, ...wordData } = data;
+        return wordData;
+      }
     }
     return null;
   } catch (error) {
