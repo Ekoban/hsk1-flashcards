@@ -788,7 +788,7 @@ const HSK1FlashcardApp = () => {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-orange-900">
         <div className="max-w-md mx-auto lg:max-w-2xl xl:max-w-3xl p-4 sm:p-6 lg:p-8 flex items-center justify-center min-h-screen">
-          <div className="text-center bg-black/20 backdrop-blur-xl rounded-3xl p-8 lg:p-12 xl:p-16 shadow-2xl w-full">
+          <div className="text-center p-8 lg:p-12 xl:p-16 w-full">
             <div className="text-6xl lg:text-7xl xl:text-8xl mb-6 lg:mb-8">🎉</div>
             <h2 className="text-3xl lg:text-4xl xl:text-5xl font-bold bg-gradient-to-r from-orange-400 to-amber-400 bg-clip-text text-transparent mb-4 lg:mb-6">
               Session Complete!
@@ -861,7 +861,7 @@ const HSK1FlashcardApp = () => {
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-orange-900">
         <div className="max-w-md mx-auto lg:max-w-2xl xl:max-w-3xl p-4 sm:p-6 lg:p-8">
           {/* Session Progress */}
-          <div className="mb-6 lg:mb-8 bg-black/20 backdrop-blur-xl rounded-3xl p-4 lg:p-6 shadow-sm">
+          <div className="mb-6 lg:mb-8 p-4 lg:p-6">
             <div className="flex justify-between text-sm lg:text-base text-gray-400 mb-2 lg:mb-3">
               <span>Progress</span>
               <span>{currentCardIndex + 1} / {currentSession.length}</span>
@@ -988,7 +988,7 @@ const HSK1FlashcardApp = () => {
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-orange-900">
         <div className="max-w-md mx-auto lg:max-w-4xl xl:max-w-6xl p-4 sm:p-6">
           {/* User Header - Compact */}
-          <div className="flex items-center justify-between mb-6 lg:mb-8 bg-black/10 backdrop-blur-xl rounded-3xl p-3 lg:p-4 shadow-sm">
+          <div className="flex items-center justify-between mb-6 lg:mb-8">
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 lg:w-10 lg:h-10 bg-gradient-to-br from-orange-500 to-amber-600 rounded-lg flex items-center justify-center text-white font-bold text-sm lg:text-base">
                 {currentUser?.displayName?.charAt(0) || (isGuestMode ? 'G' : '?')}
@@ -1052,7 +1052,7 @@ const HSK1FlashcardApp = () => {
             <div className="lg:col-span-1">
               <button
                 onClick={() => setShowSettings(true)}
-                className="w-full h-24 lg:h-28 bg-black/20 backdrop-blur-xl rounded-3xl p-4 lg:p-6 shadow-sm hover:bg-black/30 transition-all duration-200 flex flex-col justify-center"
+                className="w-full h-24 lg:h-28 rounded-3xl p-4 lg:p-6 hover:bg-black/10 transition-all duration-200 flex flex-col justify-center"
               >
                 <div className="flex items-center justify-center gap-3 mb-2">
                   <Settings size={20} className="text-orange-400 lg:w-6 lg:h-6" />
@@ -1080,7 +1080,7 @@ const HSK1FlashcardApp = () => {
           </div>
 
           {/* Learning Progress Bar */}
-          <div className="mb-6 lg:mb-8 bg-black/20 backdrop-blur-xl rounded-3xl p-4 lg:p-6 shadow-sm">
+          <div className="mb-6 lg:mb-8">
             <div className="flex justify-between items-center mb-3 lg:mb-4">
               <h3 className="text-lg lg:text-xl font-semibold text-orange-100">Overall Progress</h3>
               <div className="text-sm lg:text-base text-gray-400">
@@ -1169,28 +1169,28 @@ const HSK1FlashcardApp = () => {
 
           {/* Key Stats - Compact */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 mb-6 lg:mb-8">
-            <div className="bg-black/20 backdrop-blur-xl rounded-3xl p-4 lg:p-6 shadow-sm">
+            <div className="p-4 lg:p-6 text-center">
               <div className="text-2xl lg:text-3xl xl:text-4xl font-bold text-orange-400">{getUserStats().studyStreak}</div>
               <div className="text-sm lg:text-base text-gray-400">
                 {getUserStats().studyStreak === 1 ? "Day Streak" : "Days Streak"}
               </div>
             </div>
-            <div className="bg-black/20 backdrop-blur-xl rounded-3xl p-4 lg:p-6 shadow-sm">
+            <div className="p-4 lg:p-6 text-center">
               <div className="text-2xl lg:text-3xl xl:text-4xl font-bold text-amber-400">{formatTotalTime(totalLearningTime)}</div>
               <div className="text-sm lg:text-base text-gray-400">Learning Time</div>
             </div>
-            <div className="bg-black/20 backdrop-blur-xl rounded-3xl p-4 lg:p-6 shadow-sm lg:block">
+            <div className="p-4 lg:p-6 text-center lg:block">
               <div className="text-2xl lg:text-3xl xl:text-4xl font-bold text-green-400">{getUserStats().accuracy.toFixed(1)}%</div>
               <div className="text-sm lg:text-base text-gray-400">Accuracy</div>
             </div>
-            <div className="bg-black/20 backdrop-blur-xl rounded-3xl p-4 lg:p-6 shadow-sm lg:block">
+            <div className="p-4 lg:p-6 text-center lg:block">
               <div className="text-2xl lg:text-3xl xl:text-4xl font-bold text-blue-400">{getUserStats().totalSessions}</div>
               <div className="text-sm lg:text-base text-gray-400">Sessions</div>
             </div>
           </div>
 
           {/* Learning Progress Details */}
-          <div className="bg-black/20 backdrop-blur-xl rounded-3xl p-6 lg:p-8 shadow-sm mb-6 lg:mb-8">
+          <div className="mb-6 lg:mb-8">
             <h3 className="text-lg lg:text-xl xl:text-2xl font-semibold text-orange-100 mb-4 lg:mb-6">Learning Progress Details</h3>
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
               <div 
