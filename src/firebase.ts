@@ -3,6 +3,8 @@ import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 
 // Your web app's Firebase configuration
+// Note: Firebase client SDK keys are safe to expose publicly
+// They identify your project but don't grant access without proper rules
 const firebaseConfig = {
     apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyC5KpiJ5NZ6eOxOT2yIpLhylr1xpi3gCnI",
     authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "hsk1-flashcards.firebaseapp.com",

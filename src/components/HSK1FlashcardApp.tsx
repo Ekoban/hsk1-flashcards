@@ -3,7 +3,10 @@ import { ChevronLeft, ChevronRight, Settings, LogOut } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { useAuth } from '../contexts/AuthContext';
 import { saveUserProgress, getUserProgress, saveUserSettings, getUserSettings } from '../services/dataService';
-import hsk1Words from '../data/hsk-database.json';
+import hskDatabaseRaw from '../data/hsk-database.json';
+
+// Ensure we have the correct data structure and handle JSON import properly
+const hsk1Words = Array.isArray(hskDatabaseRaw) ? hskDatabaseRaw : (hskDatabaseRaw as any).default || [];
 
 const HSK1FlashcardApp = () => {
   const { currentUser, logout, isGuestMode } = useAuth();
@@ -95,7 +98,7 @@ const HSK1FlashcardApp = () => {
       nextReview: Date.now(),
       interval: 1
     }));
-    console.log('Initializing with HSK1 words count:', hsk1Words.length);
+    console.log('Initializing with HSK words count:', hsk1Words.length);
     console.log('Initial states count:', initialStates.length);
     
     setWordStates(initialStates);
@@ -197,7 +200,55 @@ const HSK1FlashcardApp = () => {
           if (savedProgress) {
             const parsed = JSON.parse(savedProgress);
             if (Array.isArray(parsed) && parsed.length > 0) {
-              setWordStates(parsed as WordState[]);
+              // Merge saved progress with full database (similar to Firebase flow)
+              const progressMap = new Map();
+              parsed.forEach((wordState: any) => {
+                if (wordState.id) {
+                  progressMap.set(wordState.id, wordState);
+                }
+              });
+              
+              // Create merged array with all words from database
+              const mergedProgress = hsk1Words.map((word: any) => {
+                const savedData = progressMap.get(word.id);
+                if (savedData) {
+                  // Merge original word data with saved progress
+                  return {
+                    ...word,
+                    hskLevel: word.hskLevel || 1, // Use database hskLevel
+                    level: savedData.level || 0,
+                    correctCount: savedData.correctCount || 0,
+                    incorrectCount: savedData.incorrectCount || 0,
+                    lastReviewed: savedData.lastReviewed || null,
+                    nextReview: savedData.nextReview || Date.now(),
+                    interval: savedData.interval || 1
+                  } as WordState;
+                } else {
+                  // New word not in saved progress
+                  return {
+                    ...word,
+                    hskLevel: word.hskLevel || 1,
+                    level: 0,
+                    correctCount: 0,
+                    incorrectCount: 0,
+                    lastReviewed: null,
+                    nextReview: Date.now(),
+                    interval: 1
+                  } as WordState;
+                }
+              });
+              
+              console.log('Merged localStorage progress with database:', {
+                savedWords: parsed.length,
+                totalWords: mergedProgress.length,
+                hskDistribution: {
+                  hsk1: mergedProgress.filter((w: WordState) => w.hskLevel === 1).length,
+                  hsk2: mergedProgress.filter((w: WordState) => w.hskLevel === 2).length,
+                  hsk3: mergedProgress.filter((w: WordState) => w.hskLevel === 3).length
+                }
+              });
+              
+              setWordStates(mergedProgress);
               setIsLoadingData(false);
               return;
             }
@@ -208,8 +259,43 @@ const HSK1FlashcardApp = () => {
           if (legacyProgress) {
             const parsed = JSON.parse(legacyProgress);
             if (Array.isArray(parsed) && parsed.length > 0) {
-              setWordStates(parsed as WordState[]);
-              localStorage.setItem('hsk-progress', legacyProgress); // Migrate to new key
+              // Also merge legacy progress with full database
+              const progressMap = new Map();
+              parsed.forEach((wordState: any) => {
+                if (wordState.id) {
+                  progressMap.set(wordState.id, wordState);
+                }
+              });
+              
+              const mergedProgress = hsk1Words.map((word: any) => {
+                const savedData = progressMap.get(word.id);
+                if (savedData) {
+                  return {
+                    ...word,
+                    hskLevel: word.hskLevel || 1,
+                    level: savedData.level || 0,
+                    correctCount: savedData.correctCount || 0,
+                    incorrectCount: savedData.incorrectCount || 0,
+                    lastReviewed: savedData.lastReviewed || null,
+                    nextReview: savedData.nextReview || Date.now(),
+                    interval: savedData.interval || 1
+                  } as WordState;
+                } else {
+                  return {
+                    ...word,
+                    hskLevel: word.hskLevel || 1,
+                    level: 0,
+                    correctCount: 0,
+                    incorrectCount: 0,
+                    lastReviewed: null,
+                    nextReview: Date.now(),
+                    interval: 1
+                  } as WordState;
+                }
+              });
+              
+              setWordStates(mergedProgress);
+              localStorage.setItem('hsk-progress', JSON.stringify(mergedProgress)); // Migrate to new key
               localStorage.removeItem('hsk1-progress'); // Clean up old key
               setIsLoadingData(false);
               return;
@@ -454,9 +540,9 @@ const HSK1FlashcardApp = () => {
   }, [sessionComplete, sessionElapsed, currentUser, isGuestMode]); // Removed totalLearningTime from dependencies
 
   // Get available categories from HSK1 words
-  const getAvailableCategories = () => {
-    const categories = new Set(hsk1Words.map(word => word.category || 'other'));
-    return Array.from(categories).sort();
+  const getAvailableCategories = (): string[] => {
+    const categories = new Set(hsk1Words.map((word: any) => word.category || 'other'));
+    return Array.from(categories) as string[];
   };
 
   // Count words available with current settings
@@ -747,6 +833,12 @@ const HSK1FlashcardApp = () => {
     
     const studyStreak = getStudyStreak();
     
+    const hskLevels = {
+      1: wordStates.filter(w => (w.hskLevel || 1) === 1).length,
+      2: wordStates.filter(w => (w.hskLevel || 1) === 2).length,
+      3: wordStates.filter(w => (w.hskLevel || 1) === 3).length
+    };
+    
     return {
       totalWords,
       newWords,
@@ -757,11 +849,7 @@ const HSK1FlashcardApp = () => {
       totalSessions: Math.floor(wordStates.reduce((sum, w) => sum + w.correctCount + w.incorrectCount, 0) / sessionSettings.sessionSize),
       accuracy: wordStates.reduce((sum, w) => sum + w.correctCount, 0) / Math.max(1, wordStates.reduce((sum, w) => sum + w.correctCount + w.incorrectCount, 0)) * 100,
       // HSK Level breakdown
-      hskLevels: {
-        1: wordStates.filter(w => (w.hskLevel || 1) === 1).length,
-        2: wordStates.filter(w => (w.hskLevel || 1) === 2).length,
-        3: wordStates.filter(w => (w.hskLevel || 1) === 3).length
-      },
+      hskLevels,
       // Category progress (top categories)
       categories: Object.entries(
         wordStates.reduce((acc, word) => {
