@@ -8,9 +8,9 @@ import hsk1Words from '../data/hsk1-words.json';
 const HSK1FlashcardApp = () => {
   const { currentUser, logout, isGuestMode } = useAuth();
   
-  // Load HSK1 words from JSON
+  // Load HSK words from JSON
   // Learning algorithm: Spaced Repetition System (SRS)
-  type HSK1Word = {
+  type HSKWord = {
     id: number;
     chinese: string;
     pinyin: string;
@@ -21,9 +21,11 @@ const HSK1FlashcardApp = () => {
     usageFrequency?: number;
     category?: string;
     strokeCount?: number;
+    hskLevel?: 1 | 2 | 3; // Optional for backwards compatibility
   };
 
-  type WordState = HSK1Word & {
+  type WordState = HSKWord & {
+    hskLevel: 1 | 2 | 3; // Normalized to always have this field
     level: number;
     correctCount: number;
     incorrectCount: number;
@@ -36,6 +38,7 @@ const HSK1FlashcardApp = () => {
     sessionSize: number;
     difficulties: number[];
     categories: string[];
+    hskLevels: number[];
     levels: number[];
     includeNew: boolean;
     includeLearning: boolean;
@@ -52,6 +55,7 @@ const HSK1FlashcardApp = () => {
     sessionSize: 10,
     difficulties: [1, 2, 3, 4],
     categories: [],
+    hskLevels: [1], // Default to HSK 1 for backwards compatibility
     levels: [0, 1, 2, 3],
     includeNew: true,
     includeLearning: true,
@@ -81,8 +85,9 @@ const HSK1FlashcardApp = () => {
 
   // Initialize word states from HSK1 data
   const initializeWordStates = () => {
-    const initialStates: WordState[] = hsk1Words.map((word: HSK1Word) => ({
+    const initialStates: WordState[] = hsk1Words.map((word: HSKWord) => ({
       ...word,
+      hskLevel: word.hskLevel || 1, // Default to HSK 1 for backwards compatibility
       level: 0, // New word
       correctCount: 0,
       incorrectCount: 0,
@@ -126,12 +131,13 @@ const HSK1FlashcardApp = () => {
               });
               
               // Merge HSK1 words with progress data
-              progressArray = hsk1Words.map((word: HSK1Word) => {
+              progressArray = hsk1Words.map((word: HSKWord) => {
                 const progressData = progressMap.get(word.id);
                 if (progressData) {
                   // Merge original word data with progress data
                   return {
                     ...word,
+                    hskLevel: word.hskLevel || 1, // Default to HSK 1 for backwards compatibility
                     level: progressData.level || 0,
                     correctCount: progressData.correctCount || 0,
                     incorrectCount: progressData.incorrectCount || 0,
@@ -413,6 +419,9 @@ const HSK1FlashcardApp = () => {
   const getAvailableWordsCount = () => {
     const now = Date.now();
     const filtered = wordStates.filter(word => {
+      // Filter by HSK level
+      if (sessionSettings.hskLevels.length > 0 && !sessionSettings.hskLevels.includes(word.hskLevel || 1)) return false;
+      
       // Filter by difficulty
       if (!sessionSettings.difficulties.includes(word.difficulty)) return false;
       
@@ -508,6 +517,9 @@ const HSK1FlashcardApp = () => {
     
     // Apply basic filters to all candidates
     let allCandidates = wordStates.filter(word => {
+      // Filter by HSK level
+      if (sessionSettings.hskLevels.length > 0 && !sessionSettings.hskLevels.includes(word.hskLevel || 1)) return false;
+      
       // Filter by difficulty
       if (!sessionSettings.difficulties.includes(word.difficulty)) return false;
       
@@ -755,6 +767,12 @@ const HSK1FlashcardApp = () => {
       studyStreak,
       totalSessions: Math.floor(wordStates.reduce((sum, w) => sum + w.correctCount + w.incorrectCount, 0) / sessionSettings.sessionSize),
       accuracy: wordStates.reduce((sum, w) => sum + w.correctCount, 0) / Math.max(1, wordStates.reduce((sum, w) => sum + w.correctCount + w.incorrectCount, 0)) * 100,
+      // HSK Level breakdown
+      hskLevels: {
+        1: wordStates.filter(w => (w.hskLevel || 1) === 1).length,
+        2: wordStates.filter(w => (w.hskLevel || 1) === 2).length,
+        3: wordStates.filter(w => (w.hskLevel || 1) === 3).length
+      },
       // Category progress (top categories)
       categories: Object.entries(
         wordStates.reduce((acc, word) => {
@@ -1084,7 +1102,18 @@ const HSK1FlashcardApp = () => {
             <div className="flex justify-between items-center mb-3 lg:mb-4">
               <h3 className="text-lg lg:text-xl font-semibold text-orange-100">Overall Progress</h3>
               <div className="text-sm lg:text-base text-gray-400">
-                {getUserStats().totalWords} words total
+                {(() => {
+                  const stats = getUserStats();
+                  const selectedLevels = sessionSettings.hskLevels.length > 0 ? sessionSettings.hskLevels : [1, 2, 3];
+                  const totalSelected = selectedLevels.reduce((sum, level) => sum + (stats.hskLevels[level as keyof typeof stats.hskLevels] || 0), 0);
+                  
+                  if (sessionSettings.hskLevels.length === 0 || sessionSettings.hskLevels.length === 3) {
+                    return `${stats.totalWords} words total (HSK 1-3)`;
+                  } else {
+                    const levelNames = sessionSettings.hskLevels.map(l => `HSK ${l}`).join(', ');
+                    return `${totalSelected} words (${levelNames})`;
+                  }
+                })()}
               </div>
             </div>
             
@@ -1330,6 +1359,32 @@ const HSK1FlashcardApp = () => {
                       >
                         📗 Mastered
                       </button>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-orange-100 mb-3">
+                      HSK Level
+                    </label>
+                    <div className="grid grid-cols-3 gap-2">
+                      {[1, 2, 3].map(hskLevel => (
+                        <button
+                          key={hskLevel}
+                          onClick={() => {
+                            const newHskLevels = sessionSettings.hskLevels.includes(hskLevel)
+                              ? sessionSettings.hskLevels.filter(h => h !== hskLevel)
+                              : [...sessionSettings.hskLevels, hskLevel];
+                            setSessionSettings({...sessionSettings, hskLevels: newHskLevels});
+                          }}
+                          className={`p-3 rounded-xl text-sm font-medium transition-all ${
+                            sessionSettings.hskLevels.includes(hskLevel)
+                              ? 'bg-gradient-to-r from-orange-500 to-amber-600 text-white shadow-lg' 
+                              : 'bg-white/10 text-gray-300 hover:bg-white/20'
+                          }`}
+                        >
+                          HSK {hskLevel}
+                        </button>
+                      ))}
                     </div>
                   </div>
 

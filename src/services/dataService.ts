@@ -18,6 +18,7 @@ export interface WordState {
   usageFrequency?: number;
   category?: string;
   strokeCount?: number;
+  hskLevel?: 1 | 2 | 3; // Optional for backwards compatibility
   level: number;
   correctCount: number;
   incorrectCount: number;
@@ -30,6 +31,7 @@ export interface SessionSettings {
   sessionSize: number;
   difficulties: number[];
   categories: string[];
+  hskLevels: number[];
   levels: number[];
   includeNew: boolean;
   includeLearning: boolean;
