@@ -1,15 +1,15 @@
-# HSK1 Flashcards
+# HSK 1-3 Flashcards
 
 A modern Chinese vocabulary learning app with spaced repetition, built with React, TypeScript, and Firebase.
 
 ## Features
 
-- 🎯 **500 HSK1 Words** - Essential Chinese vocabulary
+- 🎯 **2,200+ HSK Words** - Essential Chinese vocabulary across HSK levels 1-3
 - 🧠 **Spaced Repetition** - Smart learning algorithm  
 - ☁️ **Cloud Sync** - Progress saved across devices
 - 🔐 **Google Authentication** - Secure user accounts
 - 📱 **Mobile-First** - Beautiful responsive design
-- 🎨 **Custom Sessions** - Filter by difficulty, category, etc.
+- 🎨 **Custom Sessions** - Filter by difficulty, category, HSK level, etc.
 - 📊 **Progress Tracking** - Detailed statistics and word lists
 
 ## Live Demo

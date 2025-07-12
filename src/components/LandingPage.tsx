@@ -11,19 +11,19 @@ const LandingPage: React.FC = () => {
   const screenshots = [
     {
       src: "/images/dashboard.png",
-      alt: "HSK1 Flashcards Dashboard - Complete learning overview with progress tracking",
+      alt: "HSK Flashcards Dashboard - Complete learning overview with progress tracking",
       title: "Complete Learning Dashboard",
-      description: "Track your progress across all 500 words with detailed statistics and visual progress indicators"
+      description: "Track your progress across all 2,200+ words with detailed statistics and visual progress indicators"
     },
     {
       src: "/images/complete.png",
-      alt: "HSK1 Session Complete - Achievement celebration and performance statistics",
+      alt: "HSK Session Complete - Achievement celebration and performance statistics",
       title: "Session Complete & Achievements",
       description: "Celebrate your learning milestones with detailed performance analytics and progress tracking"
     },
     {
       src: "/images/session.png",
-      alt: "HSK1 Learning Session - Interactive study session with progress indicators",
+      alt: "HSK Learning Session - Interactive study session with progress indicators",
       title: "Interactive Learning Session",
       description: "Engage with interactive flashcards and track your real-time learning progress"
     }
@@ -61,14 +61,14 @@ const LandingPage: React.FC = () => {
         <div className="max-w-6xl mx-auto px-4 text-center">
           <div className="text-8xl mb-8 animate-pulse">🧠</div>
           <h1 className="text-6xl md:text-8xl font-bold mb-6 bg-gradient-to-r from-orange-400 via-amber-400 to-orange-500 bg-clip-text text-transparent">
-            HSK 1
+            HSK 1-3
           </h1>
           <h2 className="text-3xl md:text-4xl font-semibold mb-8 text-orange-100">
             3.0 Flashcards Tutor
           </h2>
           <p className="text-xl md:text-2xl text-gray-300 mb-12 max-w-2xl mx-auto leading-relaxed">
-            Master 500 essential Chinese words across 40 categories with our intelligent spaced repetition system. 
-            Learn HSK Level 1 vocabulary based on the latest HSK 3.0 standards, effectively and efficiently.
+            Master 2,200+ essential Chinese words across 70+ categories with our intelligent spaced repetition system. 
+            Learn HSK Levels 1-3 vocabulary based on the latest HSK 3.0 standards, effectively and efficiently.
           </p>
           
           {/* Authentication Section - Clean and Centered */}
@@ -165,18 +165,18 @@ const LandingPage: React.FC = () => {
       {/* Stats Section */}
       <div className="w-full py-20">
         <div className="max-w-6xl mx-auto px-4 text-center">
-          <h3 className="text-3xl md:text-4xl font-bold text-orange-100 mb-12">Learn HSK Level 1 (HSK 3.0 Standards)</h3>
+          <h3 className="text-3xl md:text-4xl font-bold text-orange-100 mb-12">Learn HSK Levels 1-3 (HSK 3.0 Standards)</h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             <div className="text-center group hover:transform hover:scale-110 transition-all duration-300">
-              <div className="text-5xl md:text-6xl font-bold text-orange-400 mb-2 group-hover:animate-pulse">500</div>
+              <div className="text-5xl md:text-6xl font-bold text-orange-400 mb-2 group-hover:animate-pulse">2,200+</div>
               <div className="text-gray-300 text-lg">Essential Words</div>
             </div>
             <div className="text-center group hover:transform hover:scale-110 transition-all duration-300">
-              <div className="text-5xl md:text-6xl font-bold text-orange-400 mb-2 group-hover:animate-pulse">4</div>
-              <div className="text-gray-300 text-lg">Difficulty Levels</div>
+              <div className="text-5xl md:text-6xl font-bold text-orange-400 mb-2 group-hover:animate-pulse">3</div>
+              <div className="text-gray-300 text-lg">HSK Levels</div>
             </div>
             <div className="text-center group hover:transform hover:scale-110 transition-all duration-300">
-              <div className="text-5xl md:text-6xl font-bold text-orange-400 mb-2 group-hover:animate-pulse">40</div>
+              <div className="text-5xl md:text-6xl font-bold text-orange-400 mb-2 group-hover:animate-pulse">70+</div>
               <div className="text-gray-300 text-lg">Word Categories</div>
             </div>
             <div className="text-center group hover:transform hover:scale-110 transition-all duration-300">
@@ -256,7 +256,7 @@ const LandingPage: React.FC = () => {
       {/* Why Choose Us Section */}
       <div className="w-full py-20">
         <div className="max-w-6xl mx-auto px-4">
-          <h3 className="text-4xl font-bold text-orange-100 mb-12 text-center">Why Choose Our HSK 1 Flashcards?</h3>
+          <h3 className="text-4xl font-bold text-orange-100 mb-12 text-center">Why Choose Our HSK 1-3 Flashcards?</h3>
           <div className="grid md:grid-cols-2 gap-12">
             <div className="group hover:transform hover:scale-105 transition-all duration-300">
               <h4 className="text-2xl font-semibold text-orange-200 mb-4 flex items-center gap-3">
@@ -264,8 +264,8 @@ const LandingPage: React.FC = () => {
                 Current HSK Standards
               </h4>
               <p className="text-gray-300 text-lg leading-relaxed">
-                Updated to the latest HSK 3.0 standards with 500 carefully curated 
-                words across 40 categories and 4 difficulty levels for HSK Level 1 certification.
+                Updated to the latest HSK 3.0 standards with 2,200+ carefully curated 
+                words across 70+ categories and multiple difficulty levels for HSK Levels 1-3 certification.
               </p>
             </div>
             <div className="group hover:transform hover:scale-105 transition-all duration-300">

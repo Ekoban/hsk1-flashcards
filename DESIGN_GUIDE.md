@@ -1,7 +1,7 @@
-# 🎨 HSK 1 Flashcards Design Guide
+# 🎨 HSK 1-3 Flashcards Design Guide
 
 ## **Brand Identity**
-The HSK 1 Flashcards app uses a single, cohesive gradient background that promotes focus, learning, and achievement. The design is centered around a unified warm palette that conveys energy, warmth, and success.
+The HSK 1-3 Flashcards app uses a single, cohesive gradient background that promotes focus, learning, and achievement. The design is centered around a unified warm palette that conveys energy, warmth, and success.
 
 ## **Color Palette**
 
@@ -99,7 +99,7 @@ bg-gradient-to-br from-gray-900 via-orange-900/80 to-amber-900/60
       <p className="text-gray-300">Content text</p>
       
       {/* Accent Numbers - Always orange-400 */}
-      <div className="text-orange-400">500</div>
+      <div className="text-orange-400">2,200+</div>
       
       {/* Primary Button - Always orange to amber gradient */}
       <button className="bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700">

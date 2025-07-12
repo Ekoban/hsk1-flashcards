@@ -3,7 +3,7 @@ import { ChevronLeft, ChevronRight, Settings, LogOut } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { useAuth } from '../contexts/AuthContext';
 import { saveUserProgress, getUserProgress, saveUserSettings, getUserSettings } from '../services/dataService';
-import hsk1Words from '../data/hsk1-words.json';
+import hsk1Words from '../data/hsk-database.json';
 
 const HSK1FlashcardApp = () => {
   const { currentUser, logout, isGuestMode } = useAuth();
@@ -53,7 +53,7 @@ const HSK1FlashcardApp = () => {
 
   const defaultSettings: SessionSettings = {
     sessionSize: 10,
-    difficulties: [1, 2, 3, 4],
+    difficulties: [1, 2, 3, 4, 5], // Default to all difficulty levels
     categories: [],
     hskLevels: [1], // Default to HSK 1 for backwards compatibility
     levels: [0, 1, 2, 3],
@@ -79,15 +79,15 @@ const HSK1FlashcardApp = () => {
   const [showSettings, setShowSettings] = useState(false);
   const [showWordList, setShowWordList] = useState(false);
   const [wordListData, setWordListData] = useState<{ title: string; words: WordState[]; description?: string }>({ title: '', words: [] });
-  const [levelChangeMessage, setLevelChangeMessage] = useState<string>('');
   const [sessionElapsed, setSessionElapsed] = useState<number>(0);
   const [totalLearningTime, setTotalLearningTime] = useState<number>(0);
+  const [kpiFilter, setKpiFilter] = useState<number[]>([1, 2, 3]); // Filter for KPI display
 
   // Initialize word states from HSK1 data
   const initializeWordStates = () => {
-    const initialStates: WordState[] = hsk1Words.map((word: HSKWord) => ({
+    const initialStates: WordState[] = hsk1Words.map((word: any) => ({
       ...word,
-      hskLevel: word.hskLevel || 1, // Default to HSK 1 for backwards compatibility
+      hskLevel: (word.hskLevel as 1 | 2 | 3) || 1, // Default to HSK 1 for backwards compatibility
       level: 0, // New word
       correctCount: 0,
       incorrectCount: 0,
@@ -131,7 +131,7 @@ const HSK1FlashcardApp = () => {
               });
               
               // Merge HSK1 words with progress data
-              progressArray = hsk1Words.map((word: HSKWord) => {
+              progressArray = hsk1Words.map((word: any) => {
                 const progressData = progressMap.get(word.id);
                 if (progressData) {
                   // Merge original word data with progress data
@@ -193,11 +193,24 @@ const HSK1FlashcardApp = () => {
         // Load from localStorage for guest users
         try {
           setIsLoadingData(true);
-          const savedProgress = localStorage.getItem('hsk1-progress');
+          const savedProgress = localStorage.getItem('hsk-progress');
           if (savedProgress) {
             const parsed = JSON.parse(savedProgress);
             if (Array.isArray(parsed) && parsed.length > 0) {
               setWordStates(parsed as WordState[]);
+              setIsLoadingData(false);
+              return;
+            }
+          }
+          
+          // Check for legacy data and migrate it
+          const legacyProgress = localStorage.getItem('hsk1-progress');
+          if (legacyProgress) {
+            const parsed = JSON.parse(legacyProgress);
+            if (Array.isArray(parsed) && parsed.length > 0) {
+              setWordStates(parsed as WordState[]);
+              localStorage.setItem('hsk-progress', legacyProgress); // Migrate to new key
+              localStorage.removeItem('hsk1-progress'); // Clean up old key
               setIsLoadingData(false);
               return;
             }
@@ -234,10 +247,19 @@ const HSK1FlashcardApp = () => {
       } else if (isGuestMode) {
         // Load from localStorage for guest users
         try {
-          const savedSettings = localStorage.getItem('hsk1-settings');
+          const savedSettings = localStorage.getItem('hsk-settings');
           if (savedSettings) {
             const parsed = JSON.parse(savedSettings);
             setSessionSettings({ ...defaultSettings, ...parsed });
+          } else {
+            // Check for legacy settings and migrate
+            const legacySettings = localStorage.getItem('hsk1-settings');
+            if (legacySettings) {
+              const parsed = JSON.parse(legacySettings);
+              setSessionSettings({ ...defaultSettings, ...parsed });
+              localStorage.setItem('hsk-settings', legacySettings); // Migrate to new key
+              localStorage.removeItem('hsk1-settings'); // Clean up old key
+            }
           }
         } catch (error) {
           console.error('Error loading guest settings:', error);
@@ -254,7 +276,7 @@ const HSK1FlashcardApp = () => {
       if (currentUser) {
         // Load from Firestore for authenticated users
         try {
-          const savedTime = localStorage.getItem(`hsk1-learning-time-${currentUser.uid}`);
+          const savedTime = localStorage.getItem(`hsk-learning-time-${currentUser.uid}`);
           if (savedTime) {
             const parsedTime = parseInt(savedTime);
             console.log('📥 Loading user learning time:', parsedTime, 'seconds');
@@ -264,7 +286,18 @@ const HSK1FlashcardApp = () => {
             } else {
               console.warn('Invalid learning time detected:', parsedTime, 'seconds. Resetting to 0');
               setTotalLearningTime(0);
-              localStorage.setItem(`hsk1-learning-time-${currentUser.uid}`, '0');
+              localStorage.setItem(`hsk-learning-time-${currentUser.uid}`, '0');
+            }
+          } else {
+            // Check for legacy learning time and migrate
+            const legacyTime = localStorage.getItem(`hsk1-learning-time-${currentUser.uid}`);
+            if (legacyTime) {
+              const parsedTime = parseInt(legacyTime);
+              if (parsedTime >= 0 && !isNaN(parsedTime)) {
+                setTotalLearningTime(parsedTime);
+                localStorage.setItem(`hsk-learning-time-${currentUser.uid}`, legacyTime);
+                localStorage.removeItem(`hsk1-learning-time-${currentUser.uid}`);
+              }
             }
           }
         } catch (error) {
@@ -273,7 +306,7 @@ const HSK1FlashcardApp = () => {
       } else if (isGuestMode) {
         // Load from localStorage for guest users
         try {
-          const savedTime = localStorage.getItem('hsk1-learning-time-guest');
+          const savedTime = localStorage.getItem('hsk-learning-time-guest');
           if (savedTime) {
             const parsedTime = parseInt(savedTime);
             console.log('📥 Loading guest learning time:', parsedTime, 'seconds');
@@ -283,7 +316,18 @@ const HSK1FlashcardApp = () => {
             } else {
               console.warn('Invalid learning time detected:', parsedTime, 'seconds. Resetting to 0');
               setTotalLearningTime(0);
-              localStorage.setItem('hsk1-learning-time-guest', '0');
+              localStorage.setItem('hsk-learning-time-guest', '0');
+            }
+          } else {
+            // Check for legacy guest time and migrate
+            const legacyTime = localStorage.getItem('hsk1-learning-time-guest');
+            if (legacyTime) {
+              const parsedTime = parseInt(legacyTime);
+              if (parsedTime >= 0 && !isNaN(parsedTime)) {
+                setTotalLearningTime(parsedTime);
+                localStorage.setItem('hsk-learning-time-guest', legacyTime);
+                localStorage.removeItem('hsk1-learning-time-guest');
+              }
             }
           }
         } catch (error) {
@@ -310,7 +354,7 @@ const HSK1FlashcardApp = () => {
       } else if (isGuestMode) {
         // Save to localStorage for guest users
         try {
-          localStorage.setItem('hsk1-settings', JSON.stringify(sessionSettings));
+          localStorage.setItem('hsk-settings', JSON.stringify(sessionSettings));
         } catch (error) {
           console.error('Error saving guest settings:', error);
         }
@@ -335,7 +379,7 @@ const HSK1FlashcardApp = () => {
       } else if (isGuestMode) {
         // Save to localStorage for guest users
         try {
-          localStorage.setItem('hsk1-progress', JSON.stringify(wordStates));
+          localStorage.setItem('hsk-progress', JSON.stringify(wordStates));
         } catch (error) {
           console.error('Error saving guest progress:', error);
         }
@@ -372,10 +416,10 @@ const HSK1FlashcardApp = () => {
       // Get current total learning time from state or localStorage to avoid stale closure
       const getCurrentTotalTime = () => {
         if (currentUser) {
-          const saved = localStorage.getItem(`hsk1-learning-time-${currentUser.uid}`);
+          const saved = localStorage.getItem(`hsk-learning-time-${currentUser.uid}`);
           return saved ? parseInt(saved) : 0;
         } else if (isGuestMode) {
-          const saved = localStorage.getItem('hsk1-learning-time-guest');
+          const saved = localStorage.getItem('hsk-learning-time-guest');
           return saved ? parseInt(saved) : 0;
         }
         return 0;
@@ -394,10 +438,10 @@ const HSK1FlashcardApp = () => {
       const saveTime = async () => {
         try {
           if (currentUser) {
-            localStorage.setItem(`hsk1-learning-time-${currentUser.uid}`, newTotalTime.toString());
+            localStorage.setItem(`hsk-learning-time-${currentUser.uid}`, newTotalTime.toString());
             console.log('💾 Saved to localStorage (user):', newTotalTime);
           } else if (isGuestMode) {
-            localStorage.setItem('hsk1-learning-time-guest', newTotalTime.toString());
+            localStorage.setItem('hsk-learning-time-guest', newTotalTime.toString());
             console.log('💾 Saved to localStorage (guest):', newTotalTime);
           }
         } catch (error) {
@@ -423,7 +467,7 @@ const HSK1FlashcardApp = () => {
       if (sessionSettings.hskLevels.length > 0 && !sessionSettings.hskLevels.includes(word.hskLevel || 1)) return false;
       
       // Filter by difficulty
-      if (!sessionSettings.difficulties.includes(word.difficulty)) return false;
+      if (sessionSettings.difficulties.length > 0 && !sessionSettings.difficulties.includes(word.difficulty)) return false;
       
       // Filter by category
       if (sessionSettings.categories.length > 0 && !sessionSettings.categories.includes(word.category || 'other')) return false;
@@ -521,7 +565,7 @@ const HSK1FlashcardApp = () => {
       if (sessionSettings.hskLevels.length > 0 && !sessionSettings.hskLevels.includes(word.hskLevel || 1)) return false;
       
       // Filter by difficulty
-      if (!sessionSettings.difficulties.includes(word.difficulty)) return false;
+      if (sessionSettings.difficulties.length > 0 && !sessionSettings.difficulties.includes(word.difficulty)) return false;
       
       // Filter by category
       if (sessionSettings.categories.length > 0 && !sessionSettings.categories.includes(word.category || 'other')) return false;
@@ -564,51 +608,17 @@ const HSK1FlashcardApp = () => {
     const filteredDueCards = allCandidates.filter(word => word.nextReview <= now);
     
     if (filteredDueCards.length >= sessionSize) {
-      // If enough due cards, create balanced difficulty mix but with random selection within each difficulty
-      const comfortCards = shuffleArray(filteredDueCards.filter(w => w.difficulty <= 2));
-      const mediumCards = shuffleArray(filteredDueCards.filter(w => w.difficulty === 3));
-      const challengeCards = shuffleArray(filteredDueCards.filter(w => w.difficulty >= 4));
-      
-      // 60% comfort level (difficulty 1-2), 30% medium (3), 10% challenge (4-5)
-      const comfort = Math.ceil(sessionSize * 0.6);
-      const medium = Math.ceil(sessionSize * 0.3);
-      const challenge = sessionSize - comfort - medium;
-      
-      sessionCards = [
-        ...comfortCards.slice(0, comfort),
-        ...mediumCards.slice(0, medium),
-        ...challengeCards.slice(0, challenge)
-      ];
-      
-      // Fill any remaining slots with more due cards (randomly selected)
-      if (sessionCards.length < sessionSize) {
-        const remaining = shuffleArray(filteredDueCards.filter(w => !sessionCards.includes(w)));
-        sessionCards = [...sessionCards, ...remaining.slice(0, sessionSize - sessionCards.length)];
-      }
+      // If enough due cards, randomly select from them with proper shuffling
+      sessionCards = shuffleArray(filteredDueCards).slice(0, sessionSize);
     } else {
       // Add all due cards first
       sessionCards = [...filteredDueCards];
       
-      // Fill remaining slots with new cards - randomly selected within difficulty preference
+      // Fill remaining slots with new cards - randomly selected
       const remainingSlots = sessionSize - sessionCards.length;
       if (remainingSlots > 0) {
-        const newWords = allCandidates.filter(word => word.level === 0 && !sessionCards.includes(word));
-        
-        // Group by difficulty and shuffle within each group
-        const newWordsByDifficulty = {
-          easy: shuffleArray(newWords.filter(w => w.difficulty <= 2)),
-          medium: shuffleArray(newWords.filter(w => w.difficulty === 3)),
-          hard: shuffleArray(newWords.filter(w => w.difficulty >= 4))
-        };
-        
-        // Prefer easier words but randomly select within each difficulty
-        const selectedNew = [
-          ...newWordsByDifficulty.easy.slice(0, Math.ceil(remainingSlots * 0.6)),
-          ...newWordsByDifficulty.medium.slice(0, Math.ceil(remainingSlots * 0.3)),
-          ...newWordsByDifficulty.hard.slice(0, Math.ceil(remainingSlots * 0.1))
-        ].slice(0, remainingSlots);
-        
-        sessionCards = [...sessionCards, ...selectedNew];
+        const newWords = shuffleArray(allCandidates.filter(word => word.level === 0 && !sessionCards.includes(word)));
+        sessionCards = [...sessionCards, ...newWords.slice(0, remainingSlots)];
         
         // If still not enough, add some review cards (randomly selected)
         if (sessionCards.length < sessionSize) {
@@ -644,7 +654,6 @@ const HSK1FlashcardApp = () => {
     if (!currentWord) return; // Safety check
     
     const now = Date.now();
-    const oldLevel = currentWord.level;
     
     // Update session stats
     setSessionStats(prev => ({
@@ -681,33 +690,13 @@ const HSK1FlashcardApp = () => {
 
     setWordStates(updatedWordStates);
 
-    // Show level change message
-    if (isCorrect && oldLevel < 3) {
-      const newLevel = Math.min(3, oldLevel + 1);
-      const messages = [
-        "📘 → 📙 Now learning this word!",
-        "📙 → 📒 Moving to review!",
-        "📒 → 📗 Mastered! Well done!"
-      ];
-      if (newLevel > oldLevel && newLevel <= 3) {
-        setLevelChangeMessage(messages[newLevel - 1] || "Level up!");
-        setTimeout(() => setLevelChangeMessage(''), 2000);
-      }
-    } else if (!isCorrect && oldLevel > 0) {
-      setLevelChangeMessage("📙 → 📘 Need more practice");
-      setTimeout(() => setLevelChangeMessage(''), 2000);
-    }
-
-    // Check for milestones and trigger confetti
+    // Trigger confetti for every correct answer
     if (isCorrect) {
-      const correctCount = sessionStats.correct + 1;
-      if (correctCount === 5 || correctCount === 10 || correctCount === 15) {
-        confetti({
-          particleCount: 100,
-          spread: 70,
-          origin: { y: 0.6 }
-        });
-      }
+      confetti({
+        particleCount: 100,
+        spread: 70,
+        origin: { y: 0.6 }
+      });
     }
 
     // Move to next card or complete session
@@ -782,6 +771,25 @@ const HSK1FlashcardApp = () => {
           return acc;
         }, {} as Record<string, number>)
       ).sort(([,a], [,b]) => (b as number) - (a as number)).slice(0, 6)
+    };
+  };
+
+  // Calculate filtered user stats based on KPI filter
+  const getFilteredStats = () => {
+    const filteredWords = wordStates.filter(w => kpiFilter.includes(w.hskLevel || 1));
+    const totalWords = filteredWords.length;
+    const newWords = filteredWords.filter(w => w.level === 0).length;
+    const learningWords = filteredWords.filter(w => w.level === 1).length;
+    const reviewWords = filteredWords.filter(w => w.level === 2).length;
+    const masteredWords = filteredWords.filter(w => w.level === 3).length;
+    
+    return {
+      totalWords,
+      newWords,
+      learningWords,
+      reviewWords,
+      masteredWords,
+      accuracy: filteredWords.reduce((sum, w) => sum + w.correctCount, 0) / Math.max(1, filteredWords.reduce((sum, w) => sum + w.correctCount + w.incorrectCount, 0)) * 100,
     };
   };
 
@@ -948,6 +956,23 @@ const HSK1FlashcardApp = () => {
                     )}
                   </div>
                   
+                  {/* Learning Level Tooltip */}
+                  <div className="mb-4 lg:mb-6 text-center">
+                    <div className="inline-flex items-center gap-2 px-3 py-2 bg-white/10 backdrop-blur-sm rounded-xl text-sm text-gray-300">
+                      <span className="text-xs">
+                        {currentCard.level === 0 && '📘 New word'}
+                        {currentCard.level === 1 && '📙 Learning'}
+                        {currentCard.level === 2 && '📒 Review'}
+                        {currentCard.level === 3 && '📗 Mastered'}
+                      </span>
+                      {currentCard.level > 0 && (
+                        <span className="text-xs text-gray-400">
+                          • {currentCard.correctCount}✓ {currentCard.incorrectCount}✗
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  
                   <div className="flex gap-4 lg:gap-6 xl:gap-8 lg:justify-center">
                     <button
                       onClick={() => handleAnswer(false)}
@@ -990,12 +1015,7 @@ const HSK1FlashcardApp = () => {
             </div>
           </div>
 
-          {/* Level Change Notification - Fixed Position */}
-          {levelChangeMessage && (
-            <div className="fixed bottom-20 lg:bottom-24 left-1/2 transform -translate-x-1/2 z-50 text-center text-sm lg:text-base font-medium text-orange-200 bg-orange-500/90 backdrop-blur-sm rounded-lg py-2 lg:py-3 px-4 lg:px-6 border border-orange-500/50 shadow-lg">
-              {levelChangeMessage}
-            </div>
-          )}
+          {/* Level Change Notification - Removed */}
         </div>
       </div>
     );
@@ -1029,99 +1049,223 @@ const HSK1FlashcardApp = () => {
             </button>
           </div>
 
-          {/* Session Controls - Horizontal Layout */}
-          <div className="mb-6 lg:mb-8 grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
-            {/* Start Session Button - Takes 2/3 width on desktop */}
-            <div className="lg:col-span-2">
-              <button
-                onClick={startSession}
-                className="relative w-full h-24 lg:h-28 bg-gradient-to-r from-orange-500 to-amber-600 text-white px-6 lg:px-8 rounded-3xl font-bold text-lg lg:text-xl hover:from-orange-600 hover:to-amber-700 transition-all duration-300 shadow-lg hover:shadow-2xl hover:shadow-orange-500/50 hover:scale-[1.02] transform overflow-hidden group"
-              >
-                {/* Animated Background Gradient */}
-                <div className="absolute inset-0 bg-gradient-to-r from-orange-600 via-amber-500 to-orange-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300 animate-pulse"></div>
-                
-                {/* Shimmer Effect */}
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent opacity-0 group-hover:opacity-100 transform -skew-x-12 translate-x-[-200%] group-hover:translate-x-[200%] transition-all duration-1000 ease-out"></div>
-                
-                {/* Sparkle Particles */}
-                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                  <div className="absolute top-2 left-1/4 w-1 h-1 bg-white rounded-full animate-ping"></div>
-                  <div className="absolute top-1/3 right-1/4 w-1.5 h-1.5 bg-white/80 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
-                  <div className="absolute bottom-1/3 left-1/3 w-1 h-1 bg-white/60 rounded-full animate-pulse" style={{animationDelay: '0.4s'}}></div>
-                  <div className="absolute top-1/2 right-1/3 w-0.5 h-0.5 bg-white rounded-full animate-ping" style={{animationDelay: '0.6s'}}></div>
-                  <div className="absolute bottom-1/4 right-1/2 w-1 h-1 bg-white/70 rounded-full animate-bounce" style={{animationDelay: '0.8s'}}></div>
-                </div>
-                
-                {/* Glow Effect */}
-                <div className="absolute inset-0 rounded-3xl bg-gradient-to-r from-orange-400 to-amber-400 opacity-0 group-hover:opacity-20 blur-xl transition-opacity duration-300"></div>
-                
-                {/* Ripple Waves */}
-                <div className="absolute inset-0 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                  <div className="absolute inset-2 border-2 border-white/20 rounded-3xl animate-ping"></div>
-                  <div className="absolute inset-4 border border-white/10 rounded-lg animate-pulse" style={{animationDelay: '0.3s'}}></div>
-                </div>
-                
-                {/* Button Content */}
-                <span className="relative z-10 drop-shadow-lg">Start Study Session</span>
-              </button>
-            </div>
+          {/* Session Controls - Unified Button Design */}
+          <div className="mb-6 lg:mb-8">
+            <div className="relative h-20 lg:h-24 bg-gradient-to-r from-orange-500 to-amber-600 rounded-3xl shadow-lg hover:shadow-2xl hover:shadow-orange-500/50 hover:scale-[1.02] transform overflow-hidden group transition-all duration-300">
+              {/* Shared Background Effects */}
+              {/* Animated Background Gradient */}
+              <div className="absolute inset-0 bg-gradient-to-r from-orange-600 via-amber-500 to-orange-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300 animate-pulse"></div>
+              
+              {/* Shimmer Effect */}
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent opacity-0 group-hover:opacity-100 transform -skew-x-12 translate-x-[-200%] group-hover:translate-x-[200%] transition-all duration-1000 ease-out"></div>
+              
+              {/* Sparkle Particles */}
+              <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                <div className="absolute top-2 left-1/4 w-1 h-1 bg-white rounded-full animate-ping"></div>
+                <div className="absolute top-1/3 right-1/4 w-1.5 h-1.5 bg-white/80 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                <div className="absolute bottom-1/3 left-1/3 w-1 h-1 bg-white/60 rounded-full animate-pulse" style={{animationDelay: '0.4s'}}></div>
+                <div className="absolute top-1/2 right-1/3 w-0.5 h-0.5 bg-white rounded-full animate-ping" style={{animationDelay: '0.6s'}}></div>
+                <div className="absolute bottom-1/4 right-1/2 w-1 h-1 bg-white/70 rounded-full animate-bounce" style={{animationDelay: '0.8s'}}></div>
+              </div>
+              
+              {/* Glow Effect */}
+              <div className="absolute inset-0 rounded-3xl bg-gradient-to-r from-orange-400 to-amber-400 opacity-0 group-hover:opacity-20 blur-xl transition-opacity duration-300"></div>
+              
+              {/* Ripple Waves */}
+              <div className="absolute inset-0 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                <div className="absolute inset-2 border-2 border-white/20 rounded-3xl animate-ping"></div>
+                <div className="absolute inset-4 border border-white/10 rounded-lg animate-pulse" style={{animationDelay: '0.3s'}}></div>
+              </div>
 
-            {/* Session Settings - Takes 1/3 width on desktop */}
-            <div className="lg:col-span-1">
-              <button
-                onClick={() => setShowSettings(true)}
-                className="w-full h-24 lg:h-28 rounded-3xl p-4 lg:p-6 hover:bg-black/10 transition-all duration-200 flex flex-col justify-center"
-              >
-                <div className="flex items-center justify-center gap-3 mb-2">
-                  <Settings size={20} className="text-orange-400 lg:w-6 lg:h-6" />
-                  <div className="font-medium text-orange-100 text-base lg:text-lg">Settings</div>
-                </div>
-                
-                {/* Session Stats */}
-                <div className="text-center">
-                  <div className="text-sm lg:text-sm text-gray-300 leading-tight">
-                    {(() => {
-                      const counts = getAvailableWordsCount();
-                      return `${counts.total} words available, ${counts.due} due for review`;
-                    })()}
+              {/* Button Content Container */}
+              <div className="relative z-10 h-full flex">
+                {/* Start Session Button - Takes 2/3 width */}
+                <button
+                  onClick={startSession}
+                  className="flex-1 h-full px-4 lg:px-6 flex items-center justify-center text-white font-bold text-base lg:text-xl hover:bg-white/10 transition-all duration-200"
+                  style={{ flexBasis: '66.666667%' }}
+                >
+                  <span className="drop-shadow-lg">Start Study Session</span>
+                </button>
+
+                {/* Divider */}
+                <div className="w-px bg-white/20 my-3"></div>
+
+                {/* Session Settings - Takes 1/3 width */}
+                <button
+                  onClick={() => setShowSettings(true)}
+                  className="h-full px-3 lg:px-4 flex items-center justify-center text-white hover:bg-white/10 transition-all duration-200 relative"
+                  style={{ flexBasis: '33.333333%' }}
+                  title="Session size, word categories, HSK levels, # of strokes..."
+                >
+                  {/* Main Content - Always Centered */}
+                  <div className="flex items-center justify-center gap-2">
+                    <Settings size={16} className="text-white lg:w-5 lg:h-5" />
+                    <div className="font-medium text-white text-xs lg:text-base hidden sm:block">Session Settings</div>
+                    <div className="font-medium text-white text-xs lg:text-base sm:hidden">Settings</div>
                   </div>
+                  
+                  {/* Session Stats - Positioned Absolutely */}
                   {isCustomSettings() && (
-                    <div className="text-xs text-gray-400 mt-1">
-                      {sessionSettings.sessionSize} cards
-                      {sessionSettings.difficulties.length !== 4 && `, difficulties: ${sessionSettings.difficulties.join(', ')}`}
-                      {sessionSettings.categories.length > 0 && `, ${sessionSettings.categories.length} categories`}
+                    <div className="absolute bottom-1 left-1/2 transform -translate-x-1/2 text-center">
+                      <div className="text-xs text-white/80 hidden lg:block whitespace-nowrap">
+                        {sessionSettings.sessionSize} cards
+                        {sessionSettings.categories.length > 0 && `, ${sessionSettings.categories.length} categories`}
+                      </div>
                     </div>
                   )}
-                </div>
-              </button>
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          {/* Quick HSK Level Selection - Full Width Aligned */}
+          <div className="mb-6 lg:mb-8">
+            <div className="grid grid-cols-3 gap-3">
+              {[1, 2, 3].map(hskLevel => (
+                <button
+                  key={hskLevel}
+                  onClick={() => {
+                    const newHskLevels = sessionSettings.hskLevels.includes(hskLevel)
+                      ? sessionSettings.hskLevels.filter(h => h !== hskLevel)
+                      : [...sessionSettings.hskLevels, hskLevel];
+                    setSessionSettings({...sessionSettings, hskLevels: newHskLevels});
+                  }}
+                  className={`relative p-3 rounded-xl text-center transition-all duration-200 ${
+                    sessionSettings.hskLevels.includes(hskLevel)
+                      ? 'bg-gradient-to-r from-orange-500 to-amber-600 text-white shadow-lg' 
+                      : 'bg-white/10 text-gray-300 hover:bg-white/20'
+                  }`}
+                >
+                  <div className="text-sm font-bold">HSK {hskLevel}</div>
+                  <div className="text-xs opacity-80">
+                    {(() => {
+                      const stats = getUserStats();
+                      const levelCount = stats.hskLevels[hskLevel as keyof typeof stats.hskLevels] || 0;
+                      return `${levelCount} words`;
+                    })()}
+                  </div>
+                </button>
+              ))}
             </div>
           </div>
 
-          {/* Learning Progress Bar */}
-          <div className="mb-6 lg:mb-8">
-            <div className="flex justify-between items-center mb-3 lg:mb-4">
-              <h3 className="text-lg lg:text-xl font-semibold text-orange-100">Overall Progress</h3>
+          {/* Key Performance Indicators - Big KPIs */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 mb-6 lg:mb-8">
+            <div className="p-4 lg:p-6 text-center">
+              <div className="text-2xl lg:text-3xl xl:text-4xl font-bold text-orange-400">{getUserStats().studyStreak}</div>
               <div className="text-sm lg:text-base text-gray-400">
-                {(() => {
-                  const stats = getUserStats();
-                  const selectedLevels = sessionSettings.hskLevels.length > 0 ? sessionSettings.hskLevels : [1, 2, 3];
-                  const totalSelected = selectedLevels.reduce((sum, level) => sum + (stats.hskLevels[level as keyof typeof stats.hskLevels] || 0), 0);
-                  
-                  if (sessionSettings.hskLevels.length === 0 || sessionSettings.hskLevels.length === 3) {
-                    return `${stats.totalWords} words total (HSK 1-3)`;
-                  } else {
-                    const levelNames = sessionSettings.hskLevels.map(l => `HSK ${l}`).join(', ');
-                    return `${totalSelected} words (${levelNames})`;
-                  }
-                })()}
+                {getUserStats().studyStreak === 1 ? "Day Streak" : "Days Streak"}
+              </div>
+            </div>
+            <div className="p-4 lg:p-6 text-center">
+              <div className="text-2xl lg:text-3xl xl:text-4xl font-bold text-amber-400">{formatTotalTime(totalLearningTime)}</div>
+              <div className="text-sm lg:text-base text-gray-400">Learning Time</div>
+            </div>
+            <div className="p-4 lg:p-6 text-center">
+              <div className="text-2xl lg:text-3xl xl:text-4xl font-bold text-green-400">{getUserStats().accuracy.toFixed(1)}%</div>
+              <div className="text-sm lg:text-base text-gray-400">Accuracy</div>
+            </div>
+            <div className="p-4 lg:p-6 text-center">
+              <div className="text-2xl lg:text-3xl xl:text-4xl font-bold text-blue-400">{getUserStats().totalSessions}</div>
+              <div className="text-sm lg:text-base text-gray-400">Sessions</div>
+            </div>
+          </div>
+
+          {/* Learning Progress Details */}
+          <div className="mb-6 lg:mb-8">
+            <div className="flex justify-between items-center mb-4 lg:mb-6">
+              <h3 className="text-lg lg:text-xl xl:text-2xl font-semibold text-orange-100">Learning Progress Details</h3>
+              
+              {/* KPI Filter - HSK Level Checkboxes */}
+              <div className="flex items-center gap-3">
+                <span className="text-sm text-gray-400">Filter by HSK Level:</span>
+                <div className="flex items-center gap-2">
+                  {[1, 2, 3].map(level => (
+                    <button
+                      key={level}
+                      onClick={() => {
+                        setKpiFilter(prev => {
+                          const newFilter = prev.includes(level) 
+                            ? prev.filter(l => l !== level)
+                            : [...prev, level].sort();
+                          
+                          // Prevent unchecking all checkboxes - always keep at least one selected
+                          return newFilter.length === 0 ? [level] : newFilter;
+                        });
+                      }}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 ${
+                        kpiFilter.includes(level)
+                          ? 'bg-orange-500/30 text-orange-300 border border-orange-500/50 shadow-sm'
+                          : 'bg-white/10 text-gray-400 border border-gray-600/30 hover:bg-white/15 hover:text-gray-300'
+                      }`}
+                    >
+                      <div className={`w-3 h-3 rounded border transition-all duration-200 flex items-center justify-center ${
+                        kpiFilter.includes(level)
+                          ? 'bg-orange-500 border-orange-500'
+                          : 'border-gray-500 bg-transparent'
+                      }`}>
+                        {kpiFilter.includes(level) && (
+                          <svg className="w-2 h-2 text-white" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                          </svg>
+                        )}
+                      </div>
+                      <span>HSK {level}</span>
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
             
+            {/* Learning Progress Cards */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 mb-6 lg:mb-8">
+              <div 
+                className="p-4 lg:p-6 bg-gradient-to-r from-blue-500/20 to-indigo-500/20 rounded-xl cursor-pointer hover:from-blue-500/25 hover:to-indigo-500/25 transition-colors duration-200 border border-blue-500/20 hover:border-blue-500/30 relative overflow-hidden group"
+                onClick={() => showWordsForCategory('new')}
+              >
+                <div className="text-2xl lg:text-3xl xl:text-4xl font-bold text-blue-400">{getFilteredStats().newWords}</div>
+                <div className="text-sm lg:text-base text-gray-400">New Words</div>
+                <div className="text-xs lg:text-sm text-gray-500 mt-1">Appear frequently until you get them right</div>
+              </div>
+              <div 
+                className="p-4 lg:p-6 bg-gradient-to-r from-orange-500/20 to-red-500/20 rounded-xl cursor-pointer hover:from-orange-500/25 hover:to-red-500/25 transition-colors duration-200 border border-orange-500/20 hover:border-orange-500/30 relative overflow-hidden group"
+                onClick={() => showWordsForCategory('learning')}
+              >
+                <div className="text-2xl lg:text-3xl xl:text-4xl font-bold text-orange-400">{getFilteredStats().learningWords}</div>
+                <div className="text-sm lg:text-base text-gray-400">Learning</div>
+                <div className="text-xs lg:text-sm text-gray-500 mt-1">Appear after 1-2 days when you answer correctly</div>
+              </div>
+              <div 
+                className="p-4 lg:p-6 bg-gradient-to-r from-yellow-500/20 to-amber-500/20 rounded-xl cursor-pointer hover:from-yellow-500/25 hover:to-amber-500/25 transition-colors duration-200 border border-yellow-500/20 hover:border-yellow-500/30 relative overflow-hidden group"
+                onClick={() => showWordsForCategory('review')}
+              >
+                <div className="text-2xl lg:text-3xl xl:text-4xl font-bold text-yellow-400">{getFilteredStats().reviewWords}</div>
+                <div className="text-sm lg:text-base text-gray-400">Review</div>
+                <div className="text-xs lg:text-sm text-gray-500 mt-1">Appear after 3-7 days for reinforcement</div>
+              </div>
+              <div 
+                className="p-4 lg:p-6 bg-gradient-to-r from-green-500/20 to-emerald-500/20 rounded-xl cursor-pointer hover:from-green-500/25 hover:to-emerald-500/25 transition-colors duration-200 border border-green-500/20 hover:border-green-500/30 relative overflow-hidden group"
+                onClick={() => showWordsForCategory('mastered')}
+              >
+                <div className="text-2xl lg:text-3xl xl:text-4xl font-bold text-green-400">{getFilteredStats().masteredWords}</div>
+                <div className="text-sm lg:text-base text-gray-400">Mastered</div>
+                <div className="text-xs lg:text-sm text-gray-500 mt-1">Appear after 1-2 weeks for maintenance</div>
+              </div>
+            </div>
+
             {/* Progress Bar */}
             <div className="relative w-full bg-gray-700/50 rounded-full h-4 lg:h-6 mb-4 lg:mb-6 overflow-hidden">
               {(() => {
-                const stats = getUserStats();
+                const stats = getFilteredStats();
                 const total = stats.totalWords;
+                if (total === 0) {
+                  return (
+                    <div className="absolute inset-0 flex items-center justify-center text-xs text-gray-400">
+                      No words available for selected HSK levels
+                    </div>
+                  );
+                }
                 const masteredPercent = (stats.masteredWords / total) * 100;
                 const reviewPercent = (stats.reviewWords / total) * 100;
                 const learningPercent = (stats.learningWords / total) * 100;
@@ -1168,91 +1312,30 @@ const HSK1FlashcardApp = () => {
               <div className="flex items-center gap-2 lg:gap-3">
                 <div className="w-3 h-3 lg:w-4 lg:h-4 bg-gradient-to-r from-green-500 to-emerald-600 rounded-full"></div>
                 <div className="text-xs lg:text-sm text-gray-300">
-                  <div className="font-medium text-green-400">{getUserStats().masteredWords}</div>
-                  <div className="text-gray-400">Mastered ({Math.round((getUserStats().masteredWords / getUserStats().totalWords) * 100)}%)</div>
+                  <div className="font-medium text-green-400">{getFilteredStats().masteredWords}</div>
+                  <div className="text-gray-400">Mastered ({getFilteredStats().totalWords > 0 ? Math.round((getFilteredStats().masteredWords / getFilteredStats().totalWords) * 100) : 0}%)</div>
                 </div>
               </div>
               <div className="flex items-center gap-2 lg:gap-3">
                 <div className="w-3 h-3 lg:w-4 lg:h-4 bg-gradient-to-r from-yellow-500 to-amber-600 rounded-full"></div>
                 <div className="text-xs lg:text-sm text-gray-300">
-                  <div className="font-medium text-yellow-400">{getUserStats().reviewWords}</div>
-                  <div className="text-gray-400">Review ({Math.round((getUserStats().reviewWords / getUserStats().totalWords) * 100)}%)</div>
+                  <div className="font-medium text-yellow-400">{getFilteredStats().reviewWords}</div>
+                  <div className="text-gray-400">Review ({getFilteredStats().totalWords > 0 ? Math.round((getFilteredStats().reviewWords / getFilteredStats().totalWords) * 100) : 0}%)</div>
                 </div>
               </div>
               <div className="flex items-center gap-2 lg:gap-3">
                 <div className="w-3 h-3 lg:w-4 lg:h-4 bg-gradient-to-r from-orange-500 to-red-600 rounded-full"></div>
                 <div className="text-xs lg:text-sm text-gray-300">
-                  <div className="font-medium text-orange-400">{getUserStats().learningWords}</div>
-                  <div className="text-gray-400">Learning ({Math.round((getUserStats().learningWords / getUserStats().totalWords) * 100)}%)</div>
+                  <div className="font-medium text-orange-400">{getFilteredStats().learningWords}</div>
+                  <div className="text-gray-400">Learning ({getFilteredStats().totalWords > 0 ? Math.round((getFilteredStats().learningWords / getFilteredStats().totalWords) * 100) : 0}%)</div>
                 </div>
               </div>
               <div className="flex items-center gap-2 lg:gap-3">
                 <div className="w-3 h-3 lg:w-4 lg:h-4 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full"></div>
                 <div className="text-xs lg:text-sm text-gray-300">
-                  <div className="font-medium text-blue-400">{getUserStats().newWords}</div>
-                  <div className="text-gray-400">New ({Math.round((getUserStats().newWords / getUserStats().totalWords) * 100)}%)</div>
+                  <div className="font-medium text-blue-400">{getFilteredStats().newWords}</div>
+                  <div className="text-gray-400">New ({getFilteredStats().totalWords > 0 ? Math.round((getFilteredStats().newWords / getFilteredStats().totalWords) * 100) : 0}%)</div>
                 </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Key Stats - Compact */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 mb-6 lg:mb-8">
-            <div className="p-4 lg:p-6 text-center">
-              <div className="text-2xl lg:text-3xl xl:text-4xl font-bold text-orange-400">{getUserStats().studyStreak}</div>
-              <div className="text-sm lg:text-base text-gray-400">
-                {getUserStats().studyStreak === 1 ? "Day Streak" : "Days Streak"}
-              </div>
-            </div>
-            <div className="p-4 lg:p-6 text-center">
-              <div className="text-2xl lg:text-3xl xl:text-4xl font-bold text-amber-400">{formatTotalTime(totalLearningTime)}</div>
-              <div className="text-sm lg:text-base text-gray-400">Learning Time</div>
-            </div>
-            <div className="p-4 lg:p-6 text-center lg:block">
-              <div className="text-2xl lg:text-3xl xl:text-4xl font-bold text-green-400">{getUserStats().accuracy.toFixed(1)}%</div>
-              <div className="text-sm lg:text-base text-gray-400">Accuracy</div>
-            </div>
-            <div className="p-4 lg:p-6 text-center lg:block">
-              <div className="text-2xl lg:text-3xl xl:text-4xl font-bold text-blue-400">{getUserStats().totalSessions}</div>
-              <div className="text-sm lg:text-base text-gray-400">Sessions</div>
-            </div>
-          </div>
-
-          {/* Learning Progress Details */}
-          <div className="mb-6 lg:mb-8">
-            <h3 className="text-lg lg:text-xl xl:text-2xl font-semibold text-orange-100 mb-4 lg:mb-6">Learning Progress Details</h3>
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
-              <div 
-                className="p-4 lg:p-6 bg-gradient-to-r from-blue-500/20 to-indigo-500/20 rounded-xl cursor-pointer hover:from-blue-500/25 hover:to-indigo-500/25 transition-colors duration-200 border border-blue-500/20 hover:border-blue-500/30 relative overflow-hidden group"
-                onClick={() => showWordsForCategory('new')}
-              >
-                <div className="text-2xl lg:text-3xl xl:text-4xl font-bold text-blue-400">{getUserStats().newWords}</div>
-                <div className="text-sm lg:text-base text-gray-400">New Words</div>
-                <div className="text-xs lg:text-sm text-gray-500 mt-1">Appear frequently until you get them right</div>
-              </div>
-              <div 
-                className="p-4 lg:p-6 bg-gradient-to-r from-orange-500/20 to-red-500/20 rounded-xl cursor-pointer hover:from-orange-500/25 hover:to-red-500/25 transition-colors duration-200 border border-orange-500/20 hover:border-orange-500/30 relative overflow-hidden group"
-                onClick={() => showWordsForCategory('learning')}
-              >
-                <div className="text-2xl lg:text-3xl xl:text-4xl font-bold text-orange-400">{getUserStats().learningWords}</div>
-                <div className="text-sm lg:text-base text-gray-400">Learning</div>
-                <div className="text-xs lg:text-sm text-gray-500 mt-1">Appear after 1-2 days when you answer correctly</div>
-              </div>
-              <div 
-                className="p-4 lg:p-6 bg-gradient-to-r from-yellow-500/20 to-amber-500/20 rounded-xl cursor-pointer hover:from-yellow-500/25 hover:to-amber-500/25 transition-colors duration-200 border border-yellow-500/20 hover:border-yellow-500/30 relative overflow-hidden group"
-                onClick={() => showWordsForCategory('review')}
-              >
-                <div className="text-2xl lg:text-3xl xl:text-4xl font-bold text-yellow-400">{getUserStats().reviewWords}</div>
-                <div className="text-sm lg:text-base text-gray-400">Review</div>
-                <div className="text-xs lg:text-sm text-gray-500 mt-1">Appear after 3-7 days for reinforcement</div>
-              </div>
-              <div 
-                className="p-4 lg:p-6 bg-gradient-to-r from-green-500/20 to-emerald-500/20 rounded-xl cursor-pointer hover:from-green-500/25 hover:to-emerald-500/25 transition-colors duration-200 border border-green-500/20 hover:border-green-500/30 relative overflow-hidden group"
-                onClick={() => showWordsForCategory('mastered')}
-              >
-                <div className="text-2xl lg:text-3xl xl:text-4xl font-bold text-green-400">{getUserStats().masteredWords}</div>
-                <div className="text-sm lg:text-base text-gray-400">Mastered</div>
-                <div className="text-xs lg:text-sm text-gray-500 mt-1">Appear after 1-2 weeks for maintenance</div>
               </div>
             </div>
           </div>
@@ -1359,58 +1442,6 @@ const HSK1FlashcardApp = () => {
                       >
                         📗 Mastered
                       </button>
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-orange-100 mb-3">
-                      HSK Level
-                    </label>
-                    <div className="grid grid-cols-3 gap-2">
-                      {[1, 2, 3].map(hskLevel => (
-                        <button
-                          key={hskLevel}
-                          onClick={() => {
-                            const newHskLevels = sessionSettings.hskLevels.includes(hskLevel)
-                              ? sessionSettings.hskLevels.filter(h => h !== hskLevel)
-                              : [...sessionSettings.hskLevels, hskLevel];
-                            setSessionSettings({...sessionSettings, hskLevels: newHskLevels});
-                          }}
-                          className={`p-3 rounded-xl text-sm font-medium transition-all ${
-                            sessionSettings.hskLevels.includes(hskLevel)
-                              ? 'bg-gradient-to-r from-orange-500 to-amber-600 text-white shadow-lg' 
-                              : 'bg-white/10 text-gray-300 hover:bg-white/20'
-                          }`}
-                        >
-                          HSK {hskLevel}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-orange-100 mb-3">
-                      Difficulty Level
-                    </label>
-                    <div className="grid grid-cols-4 gap-2">
-                      {[1, 2, 3, 4].map(difficulty => (
-                        <button
-                          key={difficulty}
-                          onClick={() => {
-                            const newDifficulties = sessionSettings.difficulties.includes(difficulty)
-                              ? sessionSettings.difficulties.filter(d => d !== difficulty)
-                              : [...sessionSettings.difficulties, difficulty];
-                            setSessionSettings({...sessionSettings, difficulties: newDifficulties});
-                          }}
-                          className={`p-3 rounded-xl text-sm font-medium transition-all ${
-                            sessionSettings.difficulties.includes(difficulty)
-                              ? 'bg-gradient-to-r from-orange-500 to-amber-600 text-white shadow-lg' 
-                              : 'bg-white/10 text-gray-300 hover:bg-white/20'
-                          }`}
-                        >
-                          {difficulty}
-                        </button>
-                      ))}
                     </div>
                   </div>
 

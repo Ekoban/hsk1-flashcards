@@ -74,15 +74,32 @@ export const createUserProfile = async (user: any): Promise<void> => {
 };
 
 // Progress Operations
+export const validateWordState = (word: any): word is WordState => {
+  return (
+    word &&
+    typeof word.id === 'number' &&
+    typeof word.chinese === 'string' &&
+    typeof word.pinyin === 'string' &&
+    typeof word.english === 'string' &&
+    typeof word.difficulty === 'number' &&
+    typeof word.level === 'number' &&
+    typeof word.correctCount === 'number' &&
+    typeof word.incorrectCount === 'number' &&
+    typeof word.interval === 'number' &&
+    (word.hskLevel === undefined || [1, 2, 3].includes(word.hskLevel))
+  );
+};
+
 export const saveUserProgress = async (userId: string, wordStates: WordState[]): Promise<void> => {
   try {
     const progressRef = doc(db, 'userProgress', userId);
-    // Filter out words with invalid IDs before saving
+    // Filter out words with invalid IDs and validate word structure
     const validWords = wordStates.filter(word => 
       word.id !== undefined && 
       word.id !== null && 
       !isNaN(Number(word.id)) && 
-      Number.isInteger(Number(word.id))
+      Number.isInteger(Number(word.id)) &&
+      validateWordState(word)
     );
     
     const progressData = validWords.reduce((acc, word) => {
@@ -92,7 +109,8 @@ export const saveUserProgress = async (userId: string, wordStates: WordState[]):
         incorrectCount: word.incorrectCount,
         lastReviewed: word.lastReviewed,
         nextReview: word.nextReview,
-        interval: word.interval
+        interval: word.interval,
+        hskLevel: word.hskLevel || 1 // Ensure HSK level is always saved
       };
       return acc;
     }, {} as Record<number, any>);
@@ -166,18 +184,24 @@ export const migrateLocalStorageData = async (userId: string): Promise<void> => 
       return; // Don't overwrite existing cloud data
     }
 
-    // Import localStorage progress
-    const localProgress = localStorage.getItem('hsk1-progress');
-    if (localProgress) {
-      const wordStates = JSON.parse(localProgress) as WordState[];
+    // Import localStorage progress (check both new and legacy keys)
+    const newProgress = localStorage.getItem('hsk-progress');
+    const legacyProgress = localStorage.getItem('hsk1-progress');
+    const progressToMigrate = newProgress || legacyProgress;
+    
+    if (progressToMigrate) {
+      const wordStates = JSON.parse(progressToMigrate) as WordState[];
       await saveUserProgress(userId, wordStates);
       console.log('Successfully migrated progress data to cloud');
     }
 
-    // Import localStorage settings
-    const localSettings = localStorage.getItem('hsk1-session-settings');
-    if (localSettings) {
-      const settings = JSON.parse(localSettings) as SessionSettings;
+    // Import localStorage settings (check both new and legacy keys)
+    const newSettings = localStorage.getItem('hsk-settings');
+    const legacySettings = localStorage.getItem('hsk1-settings');
+    const settingsToMigrate = newSettings || legacySettings;
+    
+    if (settingsToMigrate) {
+      const settings = JSON.parse(settingsToMigrate) as SessionSettings;
       await saveUserSettings(userId, settings);
       console.log('Successfully migrated settings data to cloud');
     }
