@@ -4,6 +4,7 @@ import confetti from 'canvas-confetti';
 import { useAuth } from '../contexts/AuthContext';
 import { saveUserProgress, getUserProgress, saveUserSettings, getUserSettings } from '../services/dataService';
 import hskDatabaseRaw from '../data/hsk-database.json';
+import AudioButton from './AudioButton';
 
 // Ensure we have the correct data structure and handle JSON import properly
 const hsk1Words = Array.isArray(hskDatabaseRaw) ? hskDatabaseRaw : (hskDatabaseRaw as any).default || [];
@@ -52,6 +53,10 @@ const HSK1FlashcardApp = () => {
     showIPA: boolean;
     showEnglish: boolean;
     showFrench: boolean;
+    // Audio settings
+    audioEnabled: boolean;
+    audioAutoPlay: boolean;
+    audioSpeed: number;
   };
 
   const defaultSettings: SessionSettings = {
@@ -68,7 +73,11 @@ const HSK1FlashcardApp = () => {
     showPinyin: true,
     showIPA: true,
     showEnglish: true,
-    showFrench: true
+    showFrench: true,
+    // Audio settings
+    audioEnabled: true,
+    audioAutoPlay: false,
+    audioSpeed: 0.7
   };
 
   const [isLoadingData, setIsLoadingData] = useState(true);
@@ -1015,7 +1024,20 @@ const HSK1FlashcardApp = () => {
             <div className="text-center">
               {!showAnswer ? (
                 <div>
-                  <div className="text-6xl lg:text-8xl xl:text-9xl mb-6 lg:mb-8 xl:mb-10 font-bold text-orange-100">{currentCard.chinese}</div>
+                  {/* Chinese Character with Audio Button */}
+                  <div className="flex items-center justify-center gap-4 lg:gap-6 mb-6 lg:mb-8 xl:mb-10">
+                    <div className="text-6xl lg:text-8xl xl:text-9xl font-bold text-orange-100">{currentCard.chinese}</div>
+                    {sessionSettings.audioEnabled && (
+                      <AudioButton 
+                        text={currentCard.chinese}
+                        size="lg"
+                        variant="secondary"
+                        rate={sessionSettings.audioSpeed}
+                        className="flex-shrink-0"
+                      />
+                    )}
+                  </div>
+                  
                   {sessionSettings.showPinyin && (
                     <div className="text-xl lg:text-2xl xl:text-3xl text-gray-300 mb-2 lg:mb-3 font-medium">{currentCard.pinyin}</div>
                   )}
@@ -1034,7 +1056,21 @@ const HSK1FlashcardApp = () => {
                 </div>
               ) : (
                 <div>
-                  <div className="text-6xl lg:text-8xl xl:text-9xl mb-4 lg:mb-6 font-bold text-orange-100">{currentCard.chinese}</div>
+                  {/* Chinese Character with Audio Button - Answer View */}
+                  <div className="flex items-center justify-center gap-4 lg:gap-6 mb-4 lg:mb-6">
+                    <div className="text-6xl lg:text-8xl xl:text-9xl font-bold text-orange-100">{currentCard.chinese}</div>
+                    {sessionSettings.audioEnabled && (
+                      <AudioButton 
+                        text={currentCard.chinese}
+                        size="lg"
+                        variant="secondary"
+                        rate={sessionSettings.audioSpeed}
+                        autoPlay={sessionSettings.audioAutoPlay}
+                        className="flex-shrink-0"
+                      />
+                    )}
+                  </div>
+                  
                   {sessionSettings.showPinyin && (
                     <div className="text-xl lg:text-2xl xl:text-3xl text-gray-300 mb-2 lg:mb-3 font-medium">{currentCard.pinyin}</div>
                   )}
@@ -1623,6 +1659,83 @@ const HSK1FlashcardApp = () => {
                           }`} />
                         </button>
                       </div>
+                    </div>
+                  </div>
+
+                  {/* Audio Settings */}
+                  <div>
+                    <label className="block text-sm font-medium text-orange-100 mb-3">
+                      🔊 Audio Settings
+                    </label>
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-gray-300">Enable Audio Pronunciation</span>
+                        <button
+                          onClick={() => setSessionSettings({...sessionSettings, audioEnabled: !sessionSettings.audioEnabled})}
+                          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                            sessionSettings.audioEnabled ? 'bg-orange-500' : 'bg-gray-600'
+                          }`}
+                        >
+                          <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                            sessionSettings.audioEnabled ? 'translate-x-6' : 'translate-x-1'
+                          }`} />
+                        </button>
+                      </div>
+                      
+                      {sessionSettings.audioEnabled && (
+                        <>
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm text-gray-300">Auto-play when showing answer</span>
+                            <button
+                              onClick={() => setSessionSettings({...sessionSettings, audioAutoPlay: !sessionSettings.audioAutoPlay})}
+                              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                                sessionSettings.audioAutoPlay ? 'bg-orange-500' : 'bg-gray-600'
+                              }`}
+                            >
+                              <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                                sessionSettings.audioAutoPlay ? 'translate-x-6' : 'translate-x-1'
+                              }`} />
+                            </button>
+                          </div>
+                          
+                          <div>
+                            <label className="block text-sm text-gray-300 mb-2">
+                              Audio Speed: {sessionSettings.audioSpeed}x
+                            </label>
+                            <input
+                              type="range"
+                              min="0.5"
+                              max="2"
+                              step="0.1"
+                              value={sessionSettings.audioSpeed}
+                              onChange={(e) => setSessionSettings({...sessionSettings, audioSpeed: parseFloat(e.target.value)})}
+                              className="w-full accent-orange-500"
+                            />
+                            <div className="flex justify-between text-xs text-gray-400 mt-1">
+                              <span>0.5x (Slow)</span>
+                              <span>1x (Normal)</span>
+                              <span>2x (Fast)</span>
+                            </div>
+                          </div>
+                          
+                          {/* Audio Test Button */}
+                          <div className="bg-white/5 rounded-2xl p-3">
+                            <div className="flex items-center justify-between">
+                              <span className="text-sm text-gray-300">Test Audio</span>
+                              <AudioButton 
+                                text="你好"
+                                size="sm"
+                                variant="primary"
+                                rate={sessionSettings.audioSpeed}
+                                tooltip="Test audio with 你好 (Hello)"
+                              />
+                            </div>
+                            <p className="text-xs text-gray-400 mt-1">
+                              Click to test pronunciation with "你好" (Hello)
+                            </p>
+                          </div>
+                        </>
+                      )}
                     </div>
                   </div>
 
