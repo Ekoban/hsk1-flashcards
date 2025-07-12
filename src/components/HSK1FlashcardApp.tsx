@@ -720,6 +720,12 @@ const HSK1FlashcardApp = () => {
 
   // Start a new session
   const startSession = () => {
+    // Check if at least one HSK level is selected
+    if (sessionSettings.hskLevels.length === 0) {
+      alert('Please select at least one HSK level to practice!');
+      return;
+    }
+    
     const sessionWords = getSessionWords();
     if (sessionWords.length === 0) {
       alert('No words available for practice with current settings!');
@@ -1139,7 +1145,7 @@ const HSK1FlashcardApp = () => {
 
           {/* Session Controls - Unified Button Design */}
           <div className="mb-6 lg:mb-8">
-            <div className="relative h-20 lg:h-24 bg-gradient-to-r from-orange-500 to-amber-600 rounded-3xl shadow-lg hover:shadow-2xl hover:shadow-orange-500/50 hover:scale-[1.02] transform overflow-hidden group transition-all duration-300">
+            <div className="relative h-20 lg:h-24 bg-gradient-to-r from-orange-500 to-amber-600 rounded-xl shadow-lg hover:shadow-2xl hover:shadow-orange-500/50 hover:scale-[1.02] transform overflow-hidden group transition-all duration-300">
               {/* Shared Background Effects */}
               {/* Animated Background Gradient */}
               <div className="absolute inset-0 bg-gradient-to-r from-orange-600 via-amber-500 to-orange-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300 animate-pulse"></div>
@@ -1157,11 +1163,11 @@ const HSK1FlashcardApp = () => {
               </div>
               
               {/* Glow Effect */}
-              <div className="absolute inset-0 rounded-3xl bg-gradient-to-r from-orange-400 to-amber-400 opacity-0 group-hover:opacity-20 blur-xl transition-opacity duration-300"></div>
+              <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-orange-400 to-amber-400 opacity-0 group-hover:opacity-20 blur-xl transition-opacity duration-300"></div>
               
               {/* Ripple Waves */}
-              <div className="absolute inset-0 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                <div className="absolute inset-2 border-2 border-white/20 rounded-3xl animate-ping"></div>
+              <div className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                <div className="absolute inset-2 border-2 border-white/20 rounded-xl animate-ping"></div>
                 <div className="absolute inset-4 border border-white/10 rounded-lg animate-pulse" style={{animationDelay: '0.3s'}}></div>
               </div>
 
@@ -1217,11 +1223,17 @@ const HSK1FlashcardApp = () => {
                     const newHskLevels = sessionSettings.hskLevels.includes(hskLevel)
                       ? sessionSettings.hskLevels.filter(h => h !== hskLevel)
                       : [...sessionSettings.hskLevels, hskLevel];
+                    
+                    // Prevent unchecking all levels - always keep at least one selected
+                    if (newHskLevels.length === 0) {
+                      return; // Don't allow deselecting the last level
+                    }
+                    
                     setSessionSettings({...sessionSettings, hskLevels: newHskLevels});
                   }}
-                  className={`relative p-3 rounded-xl text-center transition-all duration-200 ${
+                  className={`relative p-2 rounded-xl text-center transition-all duration-200 ${
                     sessionSettings.hskLevels.includes(hskLevel)
-                      ? 'bg-gradient-to-r from-orange-500 to-amber-600 text-white shadow-lg' 
+                      ? 'bg-gradient-to-r from-orange-400/70 to-amber-500/70 text-white shadow-md' 
                       : 'bg-white/10 text-gray-300 hover:bg-white/20'
                   }`}
                 >
@@ -1265,14 +1277,16 @@ const HSK1FlashcardApp = () => {
             <div className="flex justify-between items-center mb-4 lg:mb-6">
               <h3 className="text-lg lg:text-xl xl:text-2xl font-semibold text-orange-100">Learning Progress Details</h3>
               
-              {/* KPI Filter - HSK Level Checkboxes */}
-              <div className="flex items-center gap-3">
-                <span className="text-sm text-gray-400">Filter by HSK Level:</span>
-                <div className="flex items-center gap-2">
-                  {[1, 2, 3].map(level => (
-                    <button
-                      key={level}
-                      onClick={() => {
+              {/* KPI Filter - Lean HSK Level Checkboxes */}
+              <div className="flex items-center gap-4">
+                <span className="text-sm text-gray-400">Levels:</span>
+                {[1, 2, 3].map(level => (
+                  <div key={level} className="flex flex-col items-center gap-1">
+                    <span className="text-xs text-gray-400">{level}</span>
+                    <input
+                      type="checkbox"
+                      checked={kpiFilter.includes(level)}
+                      onChange={() => {
                         setKpiFilter(prev => {
                           const newFilter = prev.includes(level) 
                             ? prev.filter(l => l !== level)
@@ -1282,27 +1296,10 @@ const HSK1FlashcardApp = () => {
                           return newFilter.length === 0 ? [level] : newFilter;
                         });
                       }}
-                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 ${
-                        kpiFilter.includes(level)
-                          ? 'bg-orange-500/30 text-orange-300 border border-orange-500/50 shadow-sm'
-                          : 'bg-white/10 text-gray-400 border border-gray-600/30 hover:bg-white/15 hover:text-gray-300'
-                      }`}
-                    >
-                      <div className={`w-3 h-3 rounded border transition-all duration-200 flex items-center justify-center ${
-                        kpiFilter.includes(level)
-                          ? 'bg-orange-500 border-orange-500'
-                          : 'border-gray-500 bg-transparent'
-                      }`}>
-                        {kpiFilter.includes(level) && (
-                          <svg className="w-2 h-2 text-white" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                          </svg>
-                        )}
-                      </div>
-                      <span>HSK {level}</span>
-                    </button>
-                  ))}
-                </div>
+                      className="w-4 h-4 text-orange-500 bg-gray-800 border-gray-600 rounded focus:ring-orange-500 focus:ring-2"
+                    />
+                  </div>
+                ))}
               </div>
             </div>
             
