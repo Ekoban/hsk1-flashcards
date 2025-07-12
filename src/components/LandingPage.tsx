@@ -10,22 +10,34 @@ const LandingPage: React.FC = () => {
 
   const screenshots = [
     {
-      src: "/images/dashboard.png",
-      alt: "HSK Flashcards Dashboard - Complete learning overview with progress tracking",
-      title: "Complete Learning Dashboard",
-      description: "Track your progress across all 2,200+ words with detailed statistics and visual progress indicators"
+      src: "/images/Screenshot 2025-07-12 at 21-07-59 HSK 1-3 Flashcards Tutor.png",
+      alt: "HSK Flashcards Landing Page - Welcome screen with authentication and feature overview",
+      title: "Welcome to HSK 1-3 Tutor",
+      description: "Clean, modern interface with Google sign-in and guest mode. Start your Chinese learning journey with 2,200+ words across HSK levels 1-3"
     },
     {
-      src: "/images/complete.png",
-      alt: "HSK Session Complete - Achievement celebration and performance statistics",
-      title: "Session Complete & Achievements",
-      description: "Celebrate your learning milestones with detailed performance analytics and progress tracking"
+      src: "/images/Screenshot 2025-07-12 at 21-08-25 HSK 1-3 Flashcards Tutor.png",
+      alt: "HSK Learning Dashboard - Progress tracking and session configuration",
+      title: "Smart Learning Dashboard", 
+      description: "Comprehensive learning overview with HSK level selection, progress statistics, and customizable study sessions across 70+ word categories"
     },
     {
-      src: "/images/session.png",
-      alt: "HSK Learning Session - Interactive study session with progress indicators",
-      title: "Interactive Learning Session",
-      description: "Engage with interactive flashcards and track your real-time learning progress"
+      src: "/images/Screenshot 2025-07-12 at 21-09-00 HSK 1-3 Flashcards Tutor.png",
+      alt: "HSK Session Settings - Advanced customization options for personalized learning",
+      title: "Customizable Study Experience",
+      description: "Fine-tune your learning with category filters, difficulty levels, stroke count ranges, and language display preferences"
+    },
+    {
+      src: "/images/Screenshot 2025-07-12 at 21-09-25 HSK 1-3 Flashcards Tutor.png",
+      alt: "HSK Interactive Flashcard - Real-time learning with spaced repetition feedback",
+      title: "Interactive Flashcard System",
+      description: "Engaging flashcard interface with pinyin, IPA pronunciation, and immediate feedback using scientifically-proven spaced repetition"
+    },
+    {
+      src: "/images/Screenshot 2025-07-12 at 21-10-09 HSK 1-3 Flashcards Tutor.png",
+      alt: "HSK Session Complete - Achievement celebration with detailed progress analytics",
+      title: "Achievement & Progress Tracking",
+      description: "Celebrate your learning milestones with confetti animations and detailed session statistics to track your vocabulary mastery"
     }
   ];
 
@@ -188,65 +200,106 @@ const LandingPage: React.FC = () => {
       </div>
 
       {/* Screenshots Carousel Section */}
-      <div className="w-full py-20">
-        <div className="max-w-6xl mx-auto px-4">
-          <h3 className="text-4xl font-bold text-orange-100 mb-12 text-center">See It in Action</h3>
+      <div className="w-full py-24">
+        <div className="max-w-7xl mx-auto px-4">
+          <h3 className="text-4xl md:text-5xl font-bold text-orange-100 mb-20 text-center">Experience the App</h3>
           
-          {/* Main Carousel */}
+          {/* Sleek Carousel */}
           <div className="relative max-w-5xl mx-auto">
-            {/* Carousel Container */}
-            <div className="relative overflow-hidden rounded-3xl shadow-2xl border border-white/10">
-              {/* Screenshots */}
-              <div className="relative h-96 md:h-[500px] bg-gradient-to-br from-gray-800/50 to-gray-900/50 backdrop-blur-xl">
-                {screenshots.map((screenshot, index) => (
-                  <div
-                    key={index}
-                    className={`absolute inset-0 transition-opacity duration-500 ${
-                      index === currentSlide ? 'opacity-100' : 'opacity-0'
-                    }`}
-                  >
-                    <img 
-                      src={screenshot.src}
-                      alt={screenshot.alt}
-                      className="w-full h-full object-contain"
-                    />
-                    {/* Overlay with strong bottom darkening for better text visibility */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
-                    <div className="absolute bottom-6 left-6 right-6 text-white">
-                      <h4 className="font-bold text-2xl mb-2 drop-shadow-lg">{screenshot.title}</h4>
-                      <p className="text-lg text-gray-200 drop-shadow-md">{screenshot.description}</p>
+            {/* Main Display Area */}
+            <div className="relative">
+              {/* Screenshot Container with Ultra-Modern Design */}
+              <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-gray-800/20 to-gray-900/40 backdrop-blur-2xl border border-white/10 shadow-2xl">
+                {/* Screenshots */}
+                <div className="relative h-[350px] md:h-[550px] lg:h-[650px]">
+                  {screenshots.map((screenshot, index) => (
+                    <div
+                      key={index}
+                      className={`absolute inset-0 transition-all duration-1000 ease-in-out ${
+                        index === currentSlide 
+                          ? 'opacity-100 scale-100' 
+                          : 'opacity-0 scale-95'
+                      }`}
+                    >
+                      <img 
+                        src={screenshot.src}
+                        alt={screenshot.alt}
+                        className="w-full h-full object-contain p-4"
+                      />
+                      {/* Subtle bottom gradient for visual depth */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/10 via-transparent to-transparent pointer-events-none"></div>
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
+
+                {/* Ultra-Sleek Navigation Arrows */}
+                <button
+                  onClick={prevSlide}
+                  className="absolute left-6 top-1/2 -translate-y-1/2 w-14 h-14 bg-black/30 backdrop-blur-xl text-white rounded-full hover:bg-black/50 transition-all duration-300 hover:scale-110 flex items-center justify-center group border border-white/10 shadow-xl"
+                >
+                  <ChevronLeft className="w-6 h-6 group-hover:-translate-x-1 transition-transform duration-300" />
+                </button>
+                <button
+                  onClick={nextSlide}
+                  className="absolute right-6 top-1/2 -translate-y-1/2 w-14 h-14 bg-black/30 backdrop-blur-xl text-white rounded-full hover:bg-black/50 transition-all duration-300 hover:scale-110 flex items-center justify-center group border border-white/10 shadow-xl"
+                >
+                  <ChevronRight className="w-6 h-6 group-hover:translate-x-1 transition-transform duration-300" />
+                </button>
               </div>
 
-              {/* Navigation Arrows */}
-              <button
-                onClick={prevSlide}
-                className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/10 backdrop-blur-xl text-white p-3 rounded-full hover:bg-white/20 transition-all duration-300 hover:scale-110"
-              >
-                <ChevronLeft className="w-6 h-6" />
-              </button>
-              <button
-                onClick={nextSlide}
-                className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/10 backdrop-blur-xl text-white p-3 rounded-full hover:bg-white/20 transition-all duration-300 hover:scale-110"
-              >
-                <ChevronRight className="w-6 h-6" />
-              </button>
+              {/* Content Info Panel */}
+              <div className="mt-8 text-center">
+                <h4 className="text-2xl md:text-3xl font-bold text-orange-100 mb-4">
+                  {screenshots[currentSlide]?.title || "App Screenshot"}
+                </h4>
+                <p className="text-lg md:text-xl text-gray-300 max-w-4xl mx-auto leading-relaxed">
+                  {screenshots[currentSlide]?.description || "Explore the features of our HSK learning app"}
+                </p>
+              </div>
             </div>
 
-            {/* Dots Navigation */}
-            <div className="flex justify-center mt-8 space-x-3">
+            {/* Enhanced Dots Navigation */}
+            <div className="flex justify-center mt-10 space-x-3">
               {screenshots.map((_, index) => (
                 <button
                   key={index}
                   onClick={() => setCurrentSlide(index)}
-                  className={`w-3 h-3 rounded-full transition-all duration-300 ${
+                  className={`transition-all duration-500 rounded-full hover:scale-110 ${
                     index === currentSlide 
-                      ? 'bg-orange-400 scale-125' 
-                      : 'bg-gray-500 hover:bg-gray-400'
+                      ? 'w-12 h-4 bg-gradient-to-r from-orange-400 to-amber-500 shadow-lg' 
+                      : 'w-4 h-4 bg-gray-600 hover:bg-gray-500'
                   }`}
                 />
+              ))}
+            </div>
+
+            {/* Enhanced Thumbnail Navigation for Desktop */}
+            <div className="hidden lg:flex justify-center mt-16 space-x-6">
+              {screenshots.map((screenshot, index) => (
+                <button
+                  key={index}
+                  onClick={() => setCurrentSlide(index)}
+                  className={`relative overflow-hidden rounded-2xl transition-all duration-500 hover:scale-105 ${
+                    index === currentSlide 
+                      ? 'ring-3 ring-orange-400 shadow-2xl scale-105' 
+                      : 'opacity-70 hover:opacity-90'
+                  }`}
+                >
+                  <img 
+                    src={screenshot.src}
+                    alt={screenshot.alt}
+                    className="w-28 h-20 object-cover"
+                  />
+                  <div className={`absolute inset-0 bg-gradient-to-t transition-all duration-300 ${
+                    index === currentSlide 
+                      ? 'from-orange-500/20 to-transparent' 
+                      : 'from-black/40 to-black/10'
+                  }`}></div>
+                  {/* Active indicator */}
+                  {index === currentSlide && (
+                    <div className="absolute top-2 right-2 w-3 h-3 bg-orange-400 rounded-full shadow-lg"></div>
+                  )}
+                </button>
               ))}
             </div>
           </div>
