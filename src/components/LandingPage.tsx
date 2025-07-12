@@ -23,15 +23,15 @@ const LandingPage: React.FC = () => {
     },
     {
       src: "/images/Screenshot 2025-07-12 at 21-09-00 HSK 1-3 Flashcards Tutor.png",
-      alt: "HSK Session Settings - Advanced customization options for personalized learning",
+      alt: "HSK Session Settings - Advanced customization options for personalized learning including audio settings",
       title: "Customizable Study Experience",
-      description: "Fine-tune your learning with category filters, difficulty levels, stroke count ranges, and language display preferences"
+      description: "Fine-tune your learning with category filters, difficulty levels, stroke count ranges, language display preferences, and audio pronunciation controls"
     },
     {
       src: "/images/Screenshot 2025-07-12 at 21-09-25 HSK 1-3 Flashcards Tutor.png",
-      alt: "HSK Interactive Flashcard - Real-time learning with spaced repetition feedback",
-      title: "Interactive Flashcard System",
-      description: "Engaging flashcard interface with pinyin, IPA pronunciation, and immediate feedback using scientifically-proven spaced repetition"
+      alt: "HSK Interactive Flashcard - Real-time learning with spaced repetition feedback and audio pronunciation",
+      title: "Interactive Flashcard System with Audio",
+      description: "Engaging flashcard interface with pinyin, IPA pronunciation, audio speaker buttons, and immediate feedback using scientifically-proven spaced repetition"
     },
     {
       src: "/images/Screenshot 2025-07-12 at 21-10-09 HSK 1-3 Flashcards Tutor.png",
@@ -79,7 +79,7 @@ const LandingPage: React.FC = () => {
             3.0 Flashcards Tutor
           </h2>
           <p className="text-xl md:text-2xl text-gray-300 mb-12 max-w-2xl mx-auto leading-relaxed">
-            Master 2,200+ essential Chinese words across 70+ categories with our intelligent spaced repetition system. 
+            Master 2,200+ essential Chinese words across 70+ categories with our intelligent spaced repetition system and <span className="text-orange-400 font-semibold">built-in audio pronunciation</span>. 
             Learn HSK Levels 1-3 vocabulary based on the latest HSK 3.0 standards, effectively and efficiently.
           </p>
           
@@ -143,13 +143,26 @@ const LandingPage: React.FC = () => {
       {/* Features Section */}
       <div className="w-full py-20">
         <div className="max-w-6xl mx-auto px-4">
-          <div className="grid md:grid-cols-3 gap-8 lg:gap-12">
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-6">
             <div className="text-center group hover:transform hover:scale-105 transition-all duration-300">
               <div className="text-6xl mb-6 group-hover:animate-bounce">🎯</div>
               <h3 className="text-2xl font-bold text-orange-100 mb-4">Smart Learning</h3>
               <p className="text-gray-300 leading-relaxed text-lg">
                 Our spaced repetition algorithm adapts to your learning pace, 
                 focusing on words you need to practice most.
+              </p>
+            </div>
+
+            <div className="text-center group hover:transform hover:scale-105 transition-all duration-300 relative">
+              <div className="text-6xl mb-6 group-hover:animate-bounce">🔊</div>
+              {/* NEW Badge */}
+              <div className="absolute -top-2 -right-2 bg-gradient-to-r from-green-500 to-emerald-600 text-white text-xs font-bold px-2 py-1 rounded-full animate-pulse shadow-lg">
+                NEW
+              </div>
+              <h3 className="text-2xl font-bold text-orange-100 mb-4">Audio Pronunciation</h3>
+              <p className="text-gray-300 leading-relaxed text-lg">
+                Hear native Chinese pronunciation with built-in text-to-speech. 
+                Perfect your pronunciation with adjustable speed controls.
               </p>
             </div>
 
@@ -319,6 +332,17 @@ const LandingPage: React.FC = () => {
               <p className="text-gray-300 text-lg leading-relaxed">
                 Updated to the latest HSK 3.0 standards with 2,200+ carefully curated 
                 words across 70+ categories and multiple difficulty levels for HSK Levels 1-3 certification.
+              </p>
+            </div>
+            <div className="group hover:transform hover:scale-105 transition-all duration-300">
+              <h4 className="text-2xl font-semibold text-orange-200 mb-4 flex items-center gap-3">
+                <span className="text-3xl">🔊</span>
+                Built-in Audio Pronunciation
+                <span className="bg-green-500 text-white text-xs px-2 py-1 rounded-full ml-2">NEW</span>
+              </h4>
+              <p className="text-gray-300 text-lg leading-relaxed">
+                Hear native Chinese pronunciation with Web Speech API integration. 
+                Adjustable speed controls and auto-play mode for perfect pronunciation practice.
               </p>
             </div>
             <div className="group hover:transform hover:scale-105 transition-all duration-300">
