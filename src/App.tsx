@@ -3,7 +3,7 @@ import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { createUserProfile, migrateLocalStorageData } from './services/dataService';
 import HSK1FlashcardApp from './components/HSK1FlashcardApp';
 import LandingPage from './components/LandingPage';
-import AdminRoute from './components/AdminRoute';
+import AdminDashboard from './components/AdminDashboard';
 
 const AppContent = () => {
   const { currentUser, loading, isGuestMode } = useAuth();
@@ -36,9 +36,9 @@ const AppContent = () => {
     );
   }
 
-  // Show admin route if requested
+  // Show admin dashboard if requested
   if (isAdminRoute) {
-    return <AdminRoute />;
+    return <AdminDashboard />;
   }
 
   // Show app if user is logged in OR in guest mode

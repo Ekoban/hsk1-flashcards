@@ -1,16 +1,13 @@
-// Admin configuration
-// This file should not be committed to git if it contains sensitive data
+// Admin configuration - completely secure with no hardcoded emails
 export const ADMIN_CONFIG = {
-  // Admin email - this should be set via environment variable in production
-  adminEmail: import.meta.env.VITE_ADMIN_EMAIL || 'robinet.alexandre@gmail.com',
-  
-  // Fallback admin emails for production (if env var not available)
-  fallbackAdminEmails: [
-    'robinet.alexandre@gmail.com'
-  ]
+  // Admin email must be set via environment variable
+  adminEmail: import.meta.env.VITE_ADMIN_EMAIL
 };
 
 export const isAdminEmail = (email: string): boolean => {
-  return email === ADMIN_CONFIG.adminEmail || 
-         ADMIN_CONFIG.fallbackAdminEmails.includes(email);
+  if (!ADMIN_CONFIG.adminEmail) {
+    console.error('VITE_ADMIN_EMAIL environment variable is not set');
+    return false;
+  }
+  return email === ADMIN_CONFIG.adminEmail;
 };
