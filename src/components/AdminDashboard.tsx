@@ -186,40 +186,20 @@ const AdminDashboard: React.FC = () => {
 
   const loadAudioStats = async () => {
     try {
-      // Load from localStorage (since we're tracking Azure usage locally)
-      const azureUsage = JSON.parse(localStorage.getItem('azureSpeechUsage') || '{"monthlyUsage": 0, "dailyUsage": 0}');
+      // Simplified audio stats - only Web Speech API for now
       const webSpeechUsage = JSON.parse(localStorage.getItem('webSpeechUsage') || '{"monthlyUsage": 0, "dailyUsage": 0}');
       
-      // Load from Firebase if users are storing audio stats there
-      const audioStatsRef = collection(db, 'audioStats');
-      const audioSnapshot = await getDocs(audioStatsRef);
-      
-      let azureCallsTotal = 0;
-      let webSpeechCallsTotal = 0;
-      let azureCharactersTotal = 0;
-
-      audioSnapshot.forEach((doc) => {
-        const data = doc.data();
-        azureCallsTotal += data.azureCalls || 0;
-        webSpeechCallsTotal += data.webSpeechCalls || 0;
-        azureCharactersTotal += data.azureCharacters || 0;
-      });
-
-      const azureUsagePercentage = (azureUsage.monthlyUsage / 450000) * 100; // 450k limit
-      const estimatedMonthlyCost = azureUsage.monthlyUsage > 500000 ? 
-        ((azureUsage.monthlyUsage - 500000) / 1000000) * 4 : 0; // $4 per 1M chars after free tier
-
       setAudioStats({
-        azureCallsToday: 0, // Would need more detailed tracking
-        azureCallsThisWeek: 0,
-        azureCallsThisMonth: azureCallsTotal,
-        azureCharactersToday: azureUsage.dailyUsage,
-        azureCharactersThisMonth: azureUsage.monthlyUsage,
+        azureCallsToday: 0, // Disabled
+        azureCallsThisWeek: 0, // Disabled
+        azureCallsThisMonth: 0, // Disabled
+        azureCharactersToday: 0, // Disabled
+        azureCharactersThisMonth: 0, // Disabled
         webSpeechCallsToday: 0,
         webSpeechCallsThisWeek: 0,
         webSpeechCallsThisMonth: webSpeechUsage.monthlyUsage || 0,
-        azureUsagePercentage,
-        estimatedMonthlyCost
+        azureUsagePercentage: 0, // Disabled
+        estimatedMonthlyCost: 0 // Free with Web Speech API only
       });
     } catch (err) {
       console.error('Error loading audio stats:', err);
@@ -374,33 +354,37 @@ const AdminDashboard: React.FC = () => {
         {/* Audio Statistics */}
         <div className="mb-8">
           <h2 className="text-2xl font-bold text-white mb-4 flex items-center gap-2">
-            <Volume2 size={24} /> Audio API Usage
+            <Volume2 size={24} /> Audio API Usage (Web Speech Only)
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <StatCard 
-              title="Azure Characters (Month)" 
-              value={audioStats?.azureCharactersThisMonth || 0}
+              title="Azure Service" 
+              value="Disabled"
               icon={<Cloud />}
               color="blue"
-              subtitle={`${(audioStats?.azureUsagePercentage || 0).toFixed(1)}% of limit`}
-            />
-            <StatCard 
-              title="Azure Characters (Today)" 
-              value={audioStats?.azureCharactersToday || 0}
-              icon={<Cloud />}
-              color="green"
+              subtitle="Currently not configured"
+              isString
             />
             <StatCard 
               title="Web Speech Calls" 
               value={audioStats?.webSpeechCallsThisMonth || 0}
               icon={<Volume2 />}
-              color="yellow"
+              color="green"
             />
             <StatCard 
-              title="Estimated Cost" 
-              value={`$${(audioStats?.estimatedMonthlyCost || 0).toFixed(2)}`}
+              title="Cost" 
+              value="$0.00"
               icon={<TrendingUp />}
+              color="yellow"
+              subtitle="Free with Web Speech API"
+            />
+            <StatCard 
+              title="Status" 
+              value="Active"
+              icon={<Activity />}
               color="purple"
+              subtitle="Web Speech API working"
+              isString
             />
           </div>
         </div>

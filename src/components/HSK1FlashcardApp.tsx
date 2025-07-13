@@ -5,7 +5,6 @@ import { useAuth } from '../contexts/AuthContext';
 import { saveUserProgress, getUserProgress, saveUserSettings, getUserSettings } from '../services/dataService';
 import hskDatabaseRaw from '../data/hsk-database.json';
 import AudioButton from './AudioButton';
-import AzureUsageStats from './AzureUsageStats';
 
 // Ensure we have the correct data structure and handle JSON import properly
 const hsk1Words = Array.isArray(hskDatabaseRaw) ? hskDatabaseRaw : (hskDatabaseRaw as any).default || [];
@@ -1736,8 +1735,16 @@ const HSK1FlashcardApp = () => {
                             </p>
                           </div>
                           
-                          {/* Azure Usage Statistics */}
-                          <AzureUsageStats />
+                          {/* Audio Service Status */}
+                          <div className="bg-gray-800/50 rounded-lg p-4">
+                            <h3 className="text-lg font-semibold text-white mb-2">🔊 Audio Service</h3>
+                            <p className="text-gray-300 text-sm">
+                              Using Web Speech API (Browser TTS)
+                            </p>
+                            <div className="mt-2 text-xs text-green-400">
+                              ✅ Active • No API costs
+                            </div>
+                          </div>
                         </>
                       )}
                     </div>

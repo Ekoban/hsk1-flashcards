@@ -1,7 +1,6 @@
 import React from 'react';
 import { Volume2, VolumeX, AlertCircle } from 'lucide-react';
 import { useSpeechSynthesis } from '../hooks/useSpeechSynthesis';
-import { useAzureSpeech } from '../hooks/useAzureSpeech';
 
 interface AudioButtonProps {
   text: string;
@@ -25,38 +24,22 @@ const AudioButton: React.FC<AudioButtonProps> = ({
   autoPlay = false
 }) => {
   const { speak, isSupported, isSpeaking } = useSpeechSynthesis();
-  const azureSpeech = useAzureSpeech();
 
-  const handleSpeak = React.useCallback(async () => {
-    if (disabled || !text) return;
-    
-    // Try Azure first, fallback to Web Speech API
-    const azureSuccess = await azureSpeech.speakWithAzure(text, rate);
-    
-    if (!azureSuccess && isSupported) {
-      // Fallback to Web Speech API
-      speak(text, { rate });
-    }
-  }, [disabled, text, rate, isSupported, speak]);
+  const handleSpeak = React.useCallback(() => {
+    if (disabled || !text || !isSupported) return;
+    speak(text, { rate });
+  }, [disabled, text, isSupported, speak, rate]);
 
-  // Auto-play when text changes (if enabled) - Use a ref to prevent infinite loops
-  const autoPlayRef = React.useRef(autoPlay);
-  const textRef = React.useRef(text);
-  
+  // Auto-play when text changes (if enabled)
   React.useEffect(() => {
-    autoPlayRef.current = autoPlay;
-    textRef.current = text;
-  });
-
-  React.useEffect(() => {
-    if (autoPlayRef.current && textRef.current && !disabled) {
+    if (autoPlay && text && !disabled && isSupported) {
       const timer = setTimeout(() => {
         handleSpeak();
-      }, 300); // Small delay to avoid conflicts
+      }, 300);
 
       return () => clearTimeout(timer);
     }
-  }, [text, handleSpeak]); // Only depend on text and handleSpeak
+  }, [text, autoPlay, disabled, isSupported, handleSpeak]);
 
   const handleClick = () => {
     if (!disabled && text) {
@@ -84,9 +67,9 @@ const AudioButton: React.FC<AudioButtonProps> = ({
     ghost: 'bg-white/10 hover:bg-white/20 text-gray-300 hover:text-white'
   };
 
-  const isLoading = isSpeaking || azureSpeech.isLoading;
+  const isLoading = isSpeaking;
 
-  if (!isSupported && !azureSpeech.canUseAzure(text?.length || 0)) {
+  if (!isSupported) {
     return (
       <div 
         className={`${sizeClasses[size]} rounded-full bg-gray-600/50 flex items-center justify-center cursor-not-allowed ${className}`}
