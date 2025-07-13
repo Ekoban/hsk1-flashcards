@@ -56,17 +56,23 @@ export const useSpeechSynthesis = (): SpeechSynthesisHook => {
     utterance.pitch = options.pitch ?? 1;
     utterance.volume = options.volume ?? 1;
 
-    // Try to find a Chinese voice if available
+    // Try to find a Chinese voice with preferred gender if available
     let selectedVoice = null;
     if (voices.length > 0) {
-      const chineseVoice = voices.find(voice => 
+      const chineseVoices = voices.filter(voice => 
         voice.lang.includes('zh') || 
         voice.lang.includes('cmn') || 
         voice.name.toLowerCase().includes('chinese')
       );
-      if (chineseVoice) {
-        utterance.voice = chineseVoice;
-        selectedVoice = chineseVoice.name;
+      
+      if (chineseVoices.length > 0) {
+        // Use the first available Chinese voice
+        const chosenVoice = chineseVoices[0];
+        if (chosenVoice) {
+          utterance.voice = chosenVoice;
+          selectedVoice = chosenVoice.name;
+          console.log(`✅ Selected voice: ${chosenVoice.name}`);
+        }
       }
     }
 

@@ -57,6 +57,7 @@ const HSK1FlashcardApp = () => {
     audioEnabled: boolean;
     audioAutoPlay: boolean;
     audioSpeed: number;
+    audioVoiceGender: 'female' | 'male';
   };
 
   const defaultSettings: SessionSettings = {
@@ -77,7 +78,8 @@ const HSK1FlashcardApp = () => {
     // Audio settings
     audioEnabled: true,
     audioAutoPlay: false,
-    audioSpeed: 0.7
+    audioSpeed: 0.7,
+    audioVoiceGender: 'female'
   };
 
   const [isLoadingData, setIsLoadingData] = useState(true);
@@ -94,6 +96,11 @@ const HSK1FlashcardApp = () => {
   const [sessionElapsed, setSessionElapsed] = useState<number>(0);
   const [totalLearningTime, setTotalLearningTime] = useState<number>(0);
   const [kpiFilter, setKpiFilter] = useState<number[]>([1, 2, 3]); // Filter for KPI display
+
+  // Helper function to get Google TTS voice based on gender preference
+  const getVoiceForGender = (gender: 'female' | 'male'): string => {
+    return gender === 'female' ? 'zh-CN-Neural2-A' : 'zh-CN-Neural2-B';
+  };
 
   // Initialize word states from HSK1 data
   const initializeWordStates = () => {
@@ -1033,6 +1040,8 @@ const HSK1FlashcardApp = () => {
                         size="lg"
                         variant="secondary"
                         rate={sessionSettings.audioSpeed}
+                        audioService="google-tts"
+                        voice={getVoiceForGender(sessionSettings.audioVoiceGender)}
                         className="flex-shrink-0"
                       />
                     )}
@@ -1066,6 +1075,8 @@ const HSK1FlashcardApp = () => {
                         variant="secondary"
                         rate={sessionSettings.audioSpeed}
                         autoPlay={sessionSettings.audioAutoPlay}
+                        audioService="google-tts"
+                        voice={getVoiceForGender(sessionSettings.audioVoiceGender)}
                         className="flex-shrink-0"
                       />
                     )}
@@ -1718,6 +1729,45 @@ const HSK1FlashcardApp = () => {
                             </div>
                           </div>
                           
+                          {/* Voice Gender Selection */}
+                          <div>
+                            <label className="block text-sm text-gray-300 mb-2">
+                              Voice
+                            </label>
+                            <div className="grid grid-cols-2 gap-3">
+                              {[
+                                { 
+                                  value: 'female', 
+                                  label: 'Female', 
+                                  emoji: '👩', 
+                                  description: 'Natural female voice' 
+                                },
+                                { 
+                                  value: 'male', 
+                                  label: 'Male', 
+                                  emoji: '👨', 
+                                  description: 'Natural male voice' 
+                                }
+                              ].map((gender) => (
+                                <button
+                                  key={gender.value}
+                                  onClick={() => setSessionSettings({...sessionSettings, audioVoiceGender: gender.value as 'female' | 'male'})}
+                                  className={`p-3 rounded-lg border-2 transition-all text-left ${
+                                    sessionSettings.audioVoiceGender === gender.value
+                                      ? 'border-orange-500 bg-orange-500/20 text-orange-100'
+                                      : 'border-gray-600 bg-gray-700/30 text-gray-300 hover:border-gray-500'
+                                  }`}
+                                >
+                                  <div className="flex items-center gap-2 mb-1">
+                                    <span className="text-lg">{gender.emoji}</span>
+                                    <span className="font-medium">{gender.label}</span>
+                                  </div>
+                                  <div className="text-xs text-gray-400">{gender.description}</div>
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                          
                           {/* Audio Test Button */}
                           <div className="bg-white/5 rounded-2xl p-3">
                             <div className="flex items-center justify-between">
@@ -1727,23 +1777,13 @@ const HSK1FlashcardApp = () => {
                                 size="sm"
                                 variant="primary"
                                 rate={sessionSettings.audioSpeed}
-                                tooltip="Test audio with 你好 (Hello)"
+                                audioService="google-tts"
+                                voice={getVoiceForGender(sessionSettings.audioVoiceGender)}
                               />
                             </div>
                             <p className="text-xs text-gray-400 mt-1">
-                              Click to test pronunciation with "你好" (Hello)
+                              High-quality AI voice with automatic fallback
                             </p>
-                          </div>
-                          
-                          {/* Audio Service Status */}
-                          <div className="bg-gray-800/50 rounded-lg p-4">
-                            <h3 className="text-lg font-semibold text-white mb-2">🔊 Audio Service</h3>
-                            <p className="text-gray-300 text-sm">
-                              Using Web Speech API (Browser TTS)
-                            </p>
-                            <div className="mt-2 text-xs text-green-400">
-                              ✅ Active • No API costs
-                            </div>
                           </div>
                         </>
                       )}

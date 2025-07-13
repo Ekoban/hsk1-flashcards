@@ -9,6 +9,9 @@ dist/
 .env.local
 .env.production
 
+# Documentation and development files
+docs/
+
 # IDE files
 .vscode/
 .idea/

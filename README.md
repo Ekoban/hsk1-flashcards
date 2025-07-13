@@ -20,11 +20,12 @@ A **modern Chinese vocabulary learning app** with **2,200+ HSK words**, scientif
 - **70+ categories** with Chinese characters, pinyin, IPA, English & French translations
 - **Stroke count data** and usage frequency ratings
 
-### 🔊 **Audio Pronunciation** ⭐ *NEW*
-- **Web Speech API integration** - Native Chinese text-to-speech
-- **Manual & auto-play modes** with adjustable speed (0.5x - 2x)
-- **Chinese voice optimization** for accurate pronunciation
-- **Browser compatibility** - Best in Chrome/Edge, guidance for Firefox
+### 🔊 **High-Quality Audio Pronunciation** ⭐ *NEW*
+- **Google Cloud Text-to-Speech** - Professional-grade Chinese voices
+- **Neural AI voices** with natural pronunciation and intonation
+- **Automatic fallback** to Web Speech API for reliability
+- **Male & female voice options** with simple user selection
+- **Adjustable speed controls** (0.5x - 2x) for learning preferences
 
 ### 🧠 **Smart Learning System**
 - **Spaced Repetition System (SRS)** - Scientifically proven for optimal retention
@@ -59,6 +60,7 @@ A **modern Chinese vocabulary learning app** with **2,200+ HSK words**, scientif
 ### Prerequisites
 - **Node.js 18+** and npm
 - **Firebase account** for authentication and data storage
+- **Google Cloud account** for Text-to-Speech API (optional - has fallback)
 
 ### Installation
 
@@ -68,33 +70,32 @@ git clone https://github.com/Ekoban/hsk1-flashcards.git
 cd hsk1-flashcards
 npm install
 
-# Configure Firebase
-cp src/firebase.example.ts src/firebase.ts
-# Edit src/firebase.ts with your Firebase credentials
+# Configure environment variables
+cp .env.example .env.local
+# Add your Firebase and Google Cloud credentials
 
 # Start development
 npm run dev
 ```
 
-Open [http://localhost:5173](http://localhost:5173) in your browser.
+Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ## 🛠️ Tech Stack
 
 - **Frontend**: React 18, TypeScript, Tailwind CSS, Vite
 - **Backend**: Firebase (Authentication, Firestore)
-- **Audio**: Web Speech API for Chinese pronunciation
-- **Deployment**: Vercel/Firebase Hosting ready
+- **Audio**: Google Cloud Text-to-Speech + Web Speech API fallback
+- **Deployment**: Vercel optimized
 
-## 🔊 Audio Browser Compatibility
+## 🔊 Audio Quality
 
-| Browser | Support | Notes |
+| Service | Quality | Notes |
 |---------|---------|-------|
-| **Chrome** | ✅ Excellent | Full Chinese TTS, multiple voices |
-| **Edge** | ✅ Good | Chromium-based Chinese support |
-| **Firefox** | ⚠️ Limited | Basic support, may not work reliably |
-| **Safari** | ⚠️ Basic | Limited TTS capabilities |
+| **Google TTS** | ✅ Excellent | Neural AI voices, natural pronunciation |
+| **Web Speech** | ⚠️ Fallback | Browser-dependent, automatic backup |
 
-**Recommended**: Use Chrome or Edge for optimal Chinese pronunciation.
+**Primary**: Google Cloud Text-to-Speech with Neural2 Chinese voices  
+**Fallback**: Web Speech API ensures audio always works
 
 ## 📚 Learning Algorithm
 
@@ -106,16 +107,17 @@ Open [http://localhost:5173](http://localhost:5173) in your browser.
 
 ## 🆕 Recent Updates
 
-### **v2.1.0 - Audio Pronunciation** ⭐ *Latest*
-- 🔊 Web Speech API integration for Chinese TTS
-- 🎮 Manual & auto-play pronunciation modes
-- 🎛️ Adjustable speed controls (0.5x - 2x)
-- 🌐 Browser compatibility with Chrome/Edge optimization
+### **v2.2.0 - Google TTS Integration** ⭐ *Latest*
+- 🎯 Google Cloud Text-to-Speech with Neural AI voices
+- 👨👩 Simple male/female voice selection
+- 🔄 Automatic fallback to Web Speech API
+- 🧹 Simplified audio settings for better UX
+- 🚀 Production-ready with robust error handling
 
 ### **Previous Versions**
+- **v2.1.0**: Web Speech API integration and browser optimization
 - **v2.0.0**: 2,219 HSK words with multi-level support
 - **v1.5.0**: Firebase integration and cloud sync
-- **v1.4.0**: Spaced repetition algorithm improvements
 
 ## 📖 Database
 
@@ -135,9 +137,13 @@ Open [http://localhost:5173](http://localhost:5173) in your browser.
 
 ## 📄 Documentation
 
-- **[Firebase Setup](./FIREBASE_SETUP.md)** - Complete configuration guide
-- **[Deployment Guide](./DEPLOYMENT_GUIDE.md)** - Platform deployment instructions
-- **[Security Documentation](./SECURITY.md)** - Security features and best practices
+Complete documentation has been moved to the `docs/` folder (local development only):
+- Firebase setup and configuration guides
+- Deployment instructions for various platforms  
+- Security features and best practices
+- Migration strategies and development notes
+
+For production deployment, only the essential application files are included.
 
 ## 📊 Performance
 
@@ -149,9 +155,9 @@ Open [http://localhost:5173](http://localhost:5173) in your browser.
 ## 🗺️ Roadmap
 
 - [ ] **HSK 4-6 support** - Advanced vocabulary levels
-- [ ] **Writing practice** - Stroke order training
+- [ ] **Writing practice** - Stroke order training  
 - [ ] **Sentence examples** - Context-based learning
-- [ ] **AI-powered review** - Intelligent difficulty adjustment
+- [ ] **Voice quality options** - Standard vs Neural voice selection
 - [ ] **PWA features** - Enhanced offline functionality
 
 ## 📜 License
@@ -166,8 +172,8 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 
 - **HSK Standard** - Based on official HSK 3.0 vocabulary
 - **Firebase** - Backend-as-a-service platform
+- **Google Cloud TTS** - High-quality Chinese text-to-speech
 - **React & TypeScript** - Modern development framework
-- **Web Speech API** - Native browser audio capabilities
 
 ---
 
