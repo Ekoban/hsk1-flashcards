@@ -1,7 +1,7 @@
 // Google Cloud Text-to-Speech Test API route
-import { TextToSpeechClient } from '@google-cloud/text-to-speech';
+const { TextToSpeechClient } = require('@google-cloud/text-to-speech');
 
-export default async function handler(req: any, res: any) {
+module.exports = async function handler(req: any, res: any) {
   // Allow GET and POST for testing
   if (req.method !== 'GET' && req.method !== 'POST') {
     return res.status(405).json({ 
@@ -31,7 +31,7 @@ export default async function handler(req: any, res: any) {
 
     // Phase 2: Initialize Google TTS Client
     console.log('🔍 Phase 2: Google TTS Client Initialization');
-    let client: TextToSpeechClient | null = null;
+    let client: any = null;
     let clientError: string | null = null;
 
     try {

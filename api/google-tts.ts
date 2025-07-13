@@ -1,5 +1,5 @@
 // Google Cloud Text-to-Speech API route
-import { TextToSpeechClient } from '@google-cloud/text-to-speech';
+const { TextToSpeechClient } = require('@google-cloud/text-to-speech');
 
 // Local type definitions for the API route
 interface GoogleTTSRequest {
@@ -23,7 +23,7 @@ interface GoogleTTSResponse {
 }
 
 // Initialize the Google Cloud TTS client
-let ttsClient: TextToSpeechClient | null = null;
+let ttsClient: any = null;
 
 function initializeTTSClient() {
   if (ttsClient) return ttsClient;
@@ -54,7 +54,7 @@ function initializeTTSClient() {
   }
 }
 
-export default async function handler(req: any, res: any) {
+module.exports = async function handler(req: any, res: any) {
   // Log all incoming requests for debugging
   console.log(`🔍 Google TTS API called - Method: ${req.method}, URL: ${req.url}`);
   console.log(`📋 Request headers:`, JSON.stringify(req.headers, null, 2));
