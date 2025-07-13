@@ -1,7 +1,8 @@
 // API route for admin statistics
 // This can be used to get server-side stats if needed
 
-import { collection, getDocs, query, where, orderBy, limit } from 'firebase/firestore';
+// Firebase imports (currently unused but may be needed for future stats)
+// import { collection, getDocs, query, where, orderBy, limit } from 'firebase/firestore';
 
 interface AdminStatsRequest {
   adminKey: string;
