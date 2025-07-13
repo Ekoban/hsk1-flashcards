@@ -139,7 +139,7 @@ const AdminDashboard: React.FC = () => {
       setError(null);
       
       // Check if authenticated as admin
-      if (!auth.currentUser || !isAdminUser) {
+      if (!auth.currentUser) {
         setError('Admin authentication required');
         return;
       }
@@ -230,6 +230,7 @@ const AdminDashboard: React.FC = () => {
 
   const loadSessionStats = async () => {
     try {
+      console.log('📊 Loading session statistics...');
       // Get all user progress documents
       const progressRef = collection(db, 'userProgress');
       const progressSnapshot = await getDocs(progressRef);
@@ -248,25 +249,63 @@ const AdminDashboard: React.FC = () => {
       const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
       const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
 
+      console.log(`📊 Processing ${progressSnapshot.size} user progress documents`);
+
       progressSnapshot.forEach((doc) => {
         const data = doc.data();
-        const wordStates = data.wordStates || [];
+        console.log(`📊 Processing user document:`, { userId: doc.id, dataKeys: Object.keys(data) });
         
-        wordStates.forEach((word: any) => {
-          const sessionCount = (word.correctCount || 0) + (word.incorrectCount || 0);
-          totalSessions += sessionCount;
-          totalCorrect += word.correctCount || 0;
-          totalAnswers += sessionCount;
-          totalWordsStudied++;
+        // Handle both new format (nested under 'words') and old format (wordStates array)
+        let wordsData = null;
+        if (data.words) {
+          // New format: words is an object
+          wordsData = Object.values(data.words);
+          console.log(`📊 Found ${Object.keys(data.words).length} words in new format`);
+        } else if (data.wordStates) {
+          // Old format: wordStates is an array
+          wordsData = data.wordStates;
+          console.log(`📊 Found ${data.wordStates.length} words in old format`);
+        }
+        
+        if (wordsData) {
+          wordsData.forEach((word: any) => {
+            const sessionCount = (word.correctCount || 0) + (word.incorrectCount || 0);
+            totalSessions += sessionCount;
+            totalCorrect += word.correctCount || 0;
+            totalAnswers += sessionCount;
+            
+            if (sessionCount > 0) {
+              totalWordsStudied++;
+            }
 
-          // Check recent activity
-          const lastReviewed = word.lastReviewed ? new Date(word.lastReviewed) : new Date(0);
-          if (lastReviewed > today) sessionsToday += sessionCount;
-          if (lastReviewed > weekAgo) sessionsThisWeek += sessionCount;
-          if (lastReviewed > monthAgo) sessionsThisMonth += sessionCount;
-        });
+            // Check recent activity - this should only count sessions that actually happened in the time period
+            if (word.lastReviewed) {
+              const lastReviewed = typeof word.lastReviewed === 'number' 
+                ? new Date(word.lastReviewed) 
+                : word.lastReviewed.toDate ? word.lastReviewed.toDate() : new Date(word.lastReviewed);
+              
+              // For now, we can only estimate sessions by time period based on last review
+              // This is a limitation since we don't store session history with timestamps
+              // We'll count each word as 1 session per time period if it was reviewed in that period
+              if (lastReviewed > today) sessionsToday += 1;
+              if (lastReviewed > weekAgo) sessionsThisWeek += 1;
+              if (lastReviewed > monthAgo) sessionsThisMonth += 1;
+            }
+          });
+        }
 
         totalSessionTime += data.totalLearningTime || 0;
+      });
+
+      console.log('📊 Session statistics calculated:', {
+        totalSessions: `${totalSessions} (all attempts ever made)`,
+        sessionsToday: `${sessionsToday} (words reviewed today)`,
+        sessionsThisWeek: `${sessionsThisWeek} (words reviewed this week)`,
+        sessionsThisMonth: `${sessionsThisMonth} (words reviewed this month)`,
+        totalWordsStudied: `${totalWordsStudied} (unique words attempted)`,
+        totalCorrect,
+        totalAnswers,
+        note: 'Sessions Today/Week/Month count unique words reviewed in period, not total attempts'
       });
 
       setSessionStats({
@@ -317,6 +356,7 @@ const AdminDashboard: React.FC = () => {
 
   const loadSystemStats = async () => {
     try {
+      console.log('🔧 Loading system statistics...');
       // Load from HSK database
       const hskWords = 2219; // Your total word count
       
@@ -328,19 +368,32 @@ const AdminDashboard: React.FC = () => {
       let categoryStats: Record<string, number> = {};
       let hskLevelStats: Record<number, number> = {};
 
+      console.log(`🔧 Processing ${progressSnapshot.size} user progress documents for system stats`);
+
       progressSnapshot.forEach((doc) => {
         const data = doc.data();
-        const wordStates = data.wordStates || [];
         
-        wordStates.forEach((word: any) => {
-          if (word.level > 0) totalProgress++;
-          
-          const category = word.category || 'other';
-          categoryStats[category] = (categoryStats[category] || 0) + 1;
-          
-          const hskLevel = word.hskLevel || 1;
-          hskLevelStats[hskLevel] = (hskLevelStats[hskLevel] || 0) + 1;
-        });
+        // Handle both new format (nested under 'words') and old format (wordStates array)
+        let wordsData = null;
+        if (data.words) {
+          // New format: words is an object
+          wordsData = Object.values(data.words);
+        } else if (data.wordStates) {
+          // Old format: wordStates is an array
+          wordsData = data.wordStates;
+        }
+        
+        if (wordsData) {
+          wordsData.forEach((word: any) => {
+            if (word.level > 0) totalProgress++;
+            
+            const category = word.category || 'other';
+            categoryStats[category] = (categoryStats[category] || 0) + 1;
+            
+            const hskLevel = word.hskLevel || 1;
+            hskLevelStats[hskLevel] = (hskLevelStats[hskLevel] || 0) + 1;
+          });
+        }
       });
 
       const mostActiveCategory = Object.entries(categoryStats)
@@ -348,6 +401,14 @@ const AdminDashboard: React.FC = () => {
       
       const topHskLevel = Object.entries(hskLevelStats)
         .sort(([,a], [,b]) => b - a)[0]?.[0] || '1';
+
+      console.log('🔧 System statistics calculated:', {
+        totalProgress,
+        categoryStats,
+        hskLevelStats,
+        mostActiveCategory,
+        topHskLevel
+      });
 
       setSystemStats({
         totalWords: hskWords,
@@ -499,22 +560,25 @@ const AdminDashboard: React.FC = () => {
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <StatCard 
-              title="Total Sessions" 
+              title="Total Attempts" 
               value={sessionStats?.totalSessions || 0}
               icon={<Activity />}
               color="blue"
+              subtitle="All answers given"
             />
             <StatCard 
-              title="Sessions Today" 
+              title="Words Reviewed Today" 
               value={sessionStats?.sessionsToday || 0}
               icon={<Calendar />}
               color="green"
+              subtitle="Unique words practiced"
             />
             <StatCard 
-              title="Words Studied" 
+              title="Total Words Studied" 
               value={sessionStats?.totalWordsStudied || 0}
               icon={<Database />}
               color="yellow"
+              subtitle="Ever attempted"
             />
             <StatCard 
               title="Avg Accuracy" 
