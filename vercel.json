@@ -26,6 +26,17 @@
       "dest": "/index.html"
     }
   ],
+  "functions": {
+    "api/google-tts.ts": {
+      "runtime": "nodejs18.x"
+    },
+    "api/google-tts-test.ts": {
+      "runtime": "nodejs18.x"
+    },
+    "api/test.ts": {
+      "runtime": "nodejs18.x"
+    }
+  },
   "env": {
     "NODE_VERSION": "18"
   },
