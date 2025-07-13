@@ -3,6 +3,7 @@ import { Users, Activity, Volume2, Cloud, BarChart3, Calendar, TrendingUp, Datab
 import { collection, getDocs } from 'firebase/firestore';
 import { signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from 'firebase/auth';
 import { db, auth } from '../firebase';
+import { isAdminEmail } from '../config/admin';
 
 interface UserStats {
   totalUsers: number;
@@ -63,11 +64,8 @@ const AdminDashboard: React.FC = () => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
         setAuthenticated(true);
-        // Check if this is the admin user via environment variable
-        const adminEmail = import.meta.env.VITE_ADMIN_EMAIL;
-        console.log('Checking admin access for:', user.email, 'Admin email:', adminEmail);
-        
-        if (user.email === adminEmail) {
+        // Check if this is the admin user
+        if (isAdminEmail(user.email || '')) {
           setIsAdminUser(true);
           setNeedsSignIn(false);
           loadAllStats(); // Load stats only for admin
@@ -123,8 +121,7 @@ const AdminDashboard: React.FC = () => {
       }
 
       // Double-check email for security
-      const adminEmail = import.meta.env.VITE_ADMIN_EMAIL;
-      if (auth.currentUser.email !== adminEmail) {
+      if (!isAdminEmail(auth.currentUser.email || '')) {
         setError('Access denied: Invalid admin credentials');
         return;
       }
