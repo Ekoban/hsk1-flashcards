@@ -62,19 +62,38 @@ const AdminDashboard: React.FC = () => {
   useEffect(() => {
     // Set up auth state listener
     const unsubscribe = onAuthStateChanged(auth, (user) => {
+      console.log('🔐 Auth state changed:', {
+        user: user ? {
+          email: user.email,
+          uid: user.uid,
+          displayName: user.displayName
+        } : null
+      });
+
       if (user) {
         setAuthenticated(true);
+        console.log('✅ User authenticated, checking admin status...');
+        
         // Check if this is the admin user
-        if (isAdminEmail(user.email || '')) {
+        const isAdmin = isAdminEmail(user.email || '');
+        console.log('🛡️ Admin check result:', {
+          userEmail: user.email,
+          isAdmin: isAdmin
+        });
+
+        if (isAdmin) {
+          console.log('🎯 Admin access granted');
           setIsAdminUser(true);
           setNeedsSignIn(false);
           loadAllStats(); // Load stats only for admin
         } else {
+          console.log('❌ Admin access denied');
           setIsAdminUser(false);
           setError('Access denied. Admin privileges required.');
           setLoading(false);
         }
       } else {
+        console.log('🚫 No user authenticated');
         setAuthenticated(false);
         setIsAdminUser(false);
         setNeedsSignIn(true);
@@ -87,15 +106,20 @@ const AdminDashboard: React.FC = () => {
 
   const handleGoogleSignIn = async () => {
     try {
+      console.log('🔑 Starting Google sign-in...');
       setLoading(true);
       setError(null);
       const provider = new GoogleAuthProvider();
       provider.setCustomParameters({
         prompt: 'select_account'
       });
-      await signInWithPopup(auth, provider);
+      const result = await signInWithPopup(auth, provider);
+      console.log('✅ Google sign-in successful:', {
+        user: result.user.email,
+        uid: result.user.uid
+      });
     } catch (err) {
-      console.error('Sign in error:', err);
+      console.error('❌ Sign in error:', err);
       setError('Failed to sign in with Google. Please try again.');
       setLoading(false);
     }
