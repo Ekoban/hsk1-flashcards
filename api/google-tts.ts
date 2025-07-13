@@ -55,19 +55,38 @@ function initializeTTSClient() {
 }
 
 export default async function handler(req: any, res: any) {
+  // Log all incoming requests for debugging
+  console.log(`🔍 Google TTS API called - Method: ${req.method}, URL: ${req.url}`);
+  console.log(`📋 Request headers:`, JSON.stringify(req.headers, null, 2));
+  console.log(`📦 Request body:`, req.body ? JSON.stringify(req.body, null, 2) : 'No body');
+
   // Only allow POST requests
   if (req.method !== 'POST') {
+    console.log(`❌ Method not allowed: ${req.method}. Expected POST.`);
     return res.status(405).json({ 
       success: false, 
-      error: 'Method not allowed. Use POST.' 
+      error: `Method not allowed. Received ${req.method}, expected POST.` 
     });
   }
 
   try {
+    console.log(`🎯 Processing Google TTS request...`);
+    
     const { text, voice, languageCode, rate, pitch, volume }: GoogleTTSRequest = req.body;
+
+    console.log(`📝 Request parameters:`, {
+      textLength: text?.length || 0,
+      textPreview: text?.substring(0, 50) || 'No text',
+      voice,
+      languageCode,
+      rate,
+      pitch,
+      volume
+    });
 
     // Validate required parameters
     if (!text) {
+      console.log(`❌ Validation failed: Missing text parameter`);
       return res.status(400).json({ 
         success: false, 
         error: 'Text parameter is required' 
@@ -75,13 +94,17 @@ export default async function handler(req: any, res: any) {
     }
 
     if (!voice || !languageCode) {
+      console.log(`❌ Validation failed: Missing voice (${voice}) or languageCode (${languageCode})`);
       return res.status(400).json({ 
         success: false, 
         error: 'Voice and languageCode parameters are required' 
       });
     }
 
+    console.log(`✅ Request validation passed`);
+
     // Initialize TTS client
+    console.log(`🔧 Initializing Google TTS client...`);
     const client = initializeTTSClient();
 
     // Prepare the SSML with speed and pitch controls
@@ -110,9 +133,17 @@ export default async function handler(req: any, res: any) {
     console.log(`🎯 Google TTS Request: ${text.substring(0, 50)}... (${text.length} chars) with voice ${voice}`);
 
     // Make the TTS request
+    console.log(`🚀 Calling Google Cloud TTS API...`);
     const [response] = await client.synthesizeSpeech(request);
 
+    console.log(`📊 Google TTS Response:`, {
+      hasAudioContent: !!response.audioContent,
+      audioContentType: typeof response.audioContent,
+      audioContentLength: response.audioContent?.length || 0
+    });
+
     if (!response.audioContent) {
+      console.log(`❌ No audio content received from Google TTS`);
       throw new Error('No audio content received from Google TTS');
     }
 
@@ -132,6 +163,7 @@ export default async function handler(req: any, res: any) {
     };
 
     console.log(`✅ Google TTS Success: Generated ${characters} characters of audio with ${voice}`);
+    console.log(`📤 Sending response with audio length: ${response.audioContent.toString('base64').length} (base64)`);
 
     // Set appropriate headers for caching
     res.setHeader('Cache-Control', 'public, max-age=3600'); // Cache for 1 hour
@@ -140,7 +172,12 @@ export default async function handler(req: any, res: any) {
     return res.status(200).json(ttsResponse);
 
   } catch (error) {
-    console.error('❌ Google TTS Error:', error);
+    console.error('❌ Google TTS Error Details:', {
+      errorMessage: error instanceof Error ? error.message : 'Unknown error',
+      errorStack: error instanceof Error ? error.stack : 'No stack trace',
+      errorType: typeof error,
+      timestamp: new Date().toISOString()
+    });
 
     const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
     
