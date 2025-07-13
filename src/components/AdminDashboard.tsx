@@ -56,7 +56,6 @@ const AdminDashboard: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [authenticated, setAuthenticated] = useState(false);
-  const [isAdminUser, setIsAdminUser] = useState(false);
   const [needsSignIn, setNeedsSignIn] = useState(false);
 
   useEffect(() => {
@@ -83,19 +82,16 @@ const AdminDashboard: React.FC = () => {
 
         if (isAdmin) {
           console.log('🎯 Admin access granted');
-          setIsAdminUser(true);
           setNeedsSignIn(false);
           loadAllStats(); // Load stats only for admin
         } else {
           console.log('❌ Admin access denied');
-          setIsAdminUser(false);
           setError('Access denied. Admin privileges required.');
           setLoading(false);
         }
       } else {
         console.log('🚫 No user authenticated');
         setAuthenticated(false);
-        setIsAdminUser(false);
         setNeedsSignIn(true);
         setLoading(false);
       }
