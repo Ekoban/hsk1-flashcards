@@ -190,13 +190,9 @@ export const migrateLocalStorageData = async (userId: string): Promise<void> => 
     const progressToMigrate = newProgress || legacyProgress;
     
     if (progressToMigrate) {
-      try {
-        const wordStates = JSON.parse(progressToMigrate) as WordState[];
-        await saveUserProgress(userId, wordStates);
-        console.log('Successfully migrated progress data to cloud');
-      } catch (error) {
-        console.error('Failed to parse progress data:', error);
-      }
+      const wordStates = JSON.parse(progressToMigrate) as WordState[];
+      await saveUserProgress(userId, wordStates);
+      console.log('Successfully migrated progress data to cloud');
     }
 
     // Import localStorage settings (check both new and legacy keys)
@@ -205,13 +201,9 @@ export const migrateLocalStorageData = async (userId: string): Promise<void> => 
     const settingsToMigrate = newSettings || legacySettings;
     
     if (settingsToMigrate) {
-      try {
-        const settings = JSON.parse(settingsToMigrate) as SessionSettings;
-        await saveUserSettings(userId, settings);
-        console.log('Successfully migrated settings data to cloud');
-      } catch (error) {
-        console.error('Failed to parse settings data:', error);
-      }
+      const settings = JSON.parse(settingsToMigrate) as SessionSettings;
+      await saveUserSettings(userId, settings);
+      console.log('Successfully migrated settings data to cloud');
     }
   } catch (error) {
     console.error('Error migrating localStorage data:', error);

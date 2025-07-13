@@ -1,6 +1,26 @@
 // Google Cloud Text-to-Speech API route
 import { TextToSpeechClient } from '@google-cloud/text-to-speech';
-import type { GoogleTTSRequest, GoogleTTSResponse } from '../src/types/googleTTS';
+
+// Local type definitions for the API route
+interface GoogleTTSRequest {
+  text: string;
+  voice: string;
+  languageCode: string;
+  rate?: number;
+  pitch?: number;
+  volume?: number;
+}
+
+interface GoogleTTSResponse {
+  audioContent: string; // Base64 encoded audio
+  success: boolean;
+  error?: string;
+  usage?: {
+    characters: number;
+    voice: string;
+    cost: number;
+  };
+}
 
 // Initialize the Google Cloud TTS client
 let ttsClient: TextToSpeechClient | null = null;

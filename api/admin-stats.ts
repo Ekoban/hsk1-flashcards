@@ -58,15 +58,15 @@ export default async function handler(req: any, res: any) {
     if (statsType === 'audio' || statsType === 'all') {
       // Audio stats would be aggregated from client-side usage
       stats.audio = {
-        googleTTSCallsToday: 0,
-        googleTTSCallsThisWeek: 0,
-        googleTTSCallsThisMonth: 0,
-        googleTTSCharactersToday: 0,
-        googleTTSCharactersThisMonth: 0,
+        azureCallsToday: 0,
+        azureCallsThisWeek: 0,
+        azureCallsThisMonth: 0,
+        azureCharactersToday: 0,
+        azureCharactersThisMonth: 0,
         webSpeechCallsToday: 0,
         webSpeechCallsThisWeek: 0,
         webSpeechCallsThisMonth: 0,
-        googleTTSUsagePercentage: 0,
+        azureUsagePercentage: 0,
         estimatedMonthlyCost: 0,
         note: 'Audio stats tracked client-side. Use AdminDashboard component.'
       };

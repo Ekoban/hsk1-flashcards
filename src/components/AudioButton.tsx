@@ -1,6 +1,5 @@
 import React from 'react';
 import { Volume2, VolumeX, AlertCircle } from 'lucide-react';
-import { useGoogleTTS } from '../hooks/useGoogleTTS';
 import { useSpeechSynthesis } from '../hooks/useSpeechSynthesis';
 
 interface AudioButtonProps {
@@ -12,8 +11,7 @@ interface AudioButtonProps {
   tooltip?: string;
   rate?: number;
   autoPlay?: boolean;
-  audioService?: 'google-tts' | 'web-speech';
-  voice?: string;
+  voiceGender?: 'auto' | 'female' | 'male';
 }
 
 const AudioButton: React.FC<AudioButtonProps> = ({
@@ -25,37 +23,14 @@ const AudioButton: React.FC<AudioButtonProps> = ({
   tooltip = 'Listen to pronunciation',
   rate = 0.7,
   autoPlay = false,
-  audioService = 'google-tts',
-  voice = 'zh-CN-Wavenet-A'
+  voiceGender = 'auto'
 }) => {
-  const googleTTS = useGoogleTTS();
-  const webSpeech = useSpeechSynthesis();
-
-  // Select the appropriate audio service
-  const isGoogleTTS = audioService === 'google-tts';
-  const { speak, isSupported } = isGoogleTTS ? googleTTS : webSpeech;
-  
-  // Handle loading state based on service
-  const isLoading = isGoogleTTS 
-    ? (googleTTS.isLoading || googleTTS.isPlaying)
-    : webSpeech.isSpeaking;
+  const { speak, isSupported, isSpeaking } = useSpeechSynthesis();
 
   const handleSpeak = React.useCallback(() => {
     if (disabled || !text || !isSupported) return;
-    
-    if (isGoogleTTS) {
-      speak(text, { 
-        rate,
-        voice, // Use the voice from props
-        fallbackToWebSpeech: true // Enable fallback
-      });
-    } else {
-      speak(text, { 
-        rate,
-        lang: 'zh-CN'
-      });
-    }
-  }, [disabled, text, isSupported, speak, rate, voice, isGoogleTTS]);
+    speak(text, { rate, voiceGender });
+  }, [disabled, text, isSupported, speak, rate, voiceGender]);
 
   // Auto-play when text changes (if enabled)
   React.useEffect(() => {
@@ -93,6 +68,8 @@ const AudioButton: React.FC<AudioButtonProps> = ({
     secondary: 'bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 border border-blue-500/30',
     ghost: 'bg-white/10 hover:bg-white/20 text-gray-300 hover:text-white'
   };
+
+  const isLoading = isSpeaking;
 
   if (!isSupported) {
     return (

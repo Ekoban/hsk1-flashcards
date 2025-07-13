@@ -26,15 +26,15 @@ interface SessionStats {
 }
 
 interface AudioStats {
-  googleTTSCallsToday: number;
-  googleTTSCallsThisWeek: number;
-  googleTTSCallsThisMonth: number;
-  googleTTSCharactersToday: number;
-  googleTTSCharactersThisMonth: number;
+  azureCallsToday: number;
+  azureCallsThisWeek: number;
+  azureCallsThisMonth: number;
+  azureCharactersToday: number;
+  azureCharactersThisMonth: number;
   webSpeechCallsToday: number;
   webSpeechCallsThisWeek: number;
   webSpeechCallsThisMonth: number;
-  googleTTSUsagePercentage: number;
+  azureUsagePercentage: number;
   estimatedMonthlyCost: number;
 }
 
@@ -330,22 +330,20 @@ const AdminDashboard: React.FC = () => {
 
   const loadAudioStats = async () => {
     try {
-      // Google TTS and Web Speech API usage
-      const googleTTSUsage = JSON.parse(localStorage.getItem('googleTTSUsage') || '{"monthlyUsage": 0, "dailyUsage": 0}');
+      // Simplified audio stats - only Web Speech API for now
       const webSpeechUsage = JSON.parse(localStorage.getItem('webSpeechUsage') || '{"monthlyUsage": 0, "dailyUsage": 0}');
       
       setAudioStats({
-        googleTTSCallsToday: 0,
-        googleTTSCallsThisWeek: 0,
-        googleTTSCallsThisMonth: 0,
-        googleTTSCharactersToday: googleTTSUsage.dailyUsage || 0,
-        googleTTSCharactersThisMonth: googleTTSUsage.monthlyUsage || 0,
+        azureCallsToday: 0, // Disabled
+        azureCallsThisWeek: 0, // Disabled
+        azureCallsThisMonth: 0, // Disabled
+        azureCharactersToday: 0, // Disabled
+        azureCharactersThisMonth: 0, // Disabled
         webSpeechCallsToday: 0,
         webSpeechCallsThisWeek: 0,
         webSpeechCallsThisMonth: webSpeechUsage.monthlyUsage || 0,
-        googleTTSUsagePercentage: (googleTTSUsage.monthlyUsage || 0) / 4000000 * 100, // 4M free tier
-        estimatedMonthlyCost: (googleTTSUsage.monthlyUsage || 0) > 4000000 ? 
-          (((googleTTSUsage.monthlyUsage || 0) - 4000000) / 1000000) * 4 : 0
+        azureUsagePercentage: 0, // Disabled
+        estimatedMonthlyCost: 0 // Free with Web Speech API only
       });
     } catch (err) {
       console.error('Error loading audio stats:', err);
@@ -590,36 +588,36 @@ const AdminDashboard: React.FC = () => {
         {/* Audio Statistics */}
         <div className="mb-8">
           <h2 className="text-2xl font-bold text-white mb-4 flex items-center gap-2">
-            <Volume2 size={24} /> Audio API Usage (Google TTS + Web Speech)
+            <Volume2 size={24} /> Audio API Usage (Web Speech Only)
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <StatCard 
-              title="Google TTS Characters" 
-              value={audioStats?.googleTTSCharactersThisMonth || 0}
+              title="Azure Service" 
+              value="Disabled"
               icon={<Cloud />}
               color="blue"
-              subtitle={`${((audioStats?.googleTTSUsagePercentage || 0)).toFixed(1)}% of free tier`}
+              subtitle="Currently not configured"
+              isString
             />
             <StatCard 
               title="Web Speech Calls" 
               value={audioStats?.webSpeechCallsThisMonth || 0}
               icon={<Volume2 />}
               color="green"
-              subtitle="Fallback service"
             />
             <StatCard 
-              title="Monthly Cost" 
-              value={`$${(audioStats?.estimatedMonthlyCost || 0).toFixed(2)}`}
+              title="Cost" 
+              value="$0.00"
               icon={<TrendingUp />}
               color="yellow"
-              subtitle="Google TTS pricing"
+              subtitle="Free with Web Speech API"
             />
             <StatCard 
               title="Status" 
               value="Active"
               icon={<Activity />}
               color="purple"
-              subtitle="Google TTS + Web Speech"
+              subtitle="Web Speech API working"
               isString
             />
           </div>

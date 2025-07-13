@@ -12,14 +12,14 @@ interface MonthStats {
 }
 
 interface DetailedStats {
+  azure?: Record<string, MonthStats>;
   webSpeech?: Record<string, MonthStats>;
-  googleTTS?: Record<string, MonthStats>;
 }
 
 export class AudioUsageTracker {
   private static instance: AudioUsageTracker;
+  private azureUsageKey = 'azureSpeechUsage';
   private webSpeechUsageKey = 'webSpeechUsage';
-  private googleTTSUsageKey = 'googleTTSUsage';
   private audioStatsKey = 'audioStatsDetailed';
 
   static getInstance(): AudioUsageTracker {
@@ -29,13 +29,13 @@ export class AudioUsageTracker {
     return AudioUsageTracker.instance;
   }
 
-  // Track Google TTS usage
-  trackGoogleTTSUsage(text: string, voice: string, success: boolean) {
+  // Track Azure Speech usage
+  trackAzureUsage(text: string, voice: string, success: boolean) {
     const now = new Date();
     const dateStr = now.toISOString().split('T')[0] || now.toDateString();
     const monthStr = now.toISOString().substring(0, 7);
     
-    const usage = this.getGoogleTTSUsage();
+    const usage = this.getAzureUsage();
     const stats = this.getDetailedStats();
     
     // Update character counts
@@ -46,9 +46,9 @@ export class AudioUsageTracker {
     }
     
     // Update detailed stats
-    if (!stats.googleTTS) stats.googleTTS = {};
-    if (!stats.googleTTS[monthStr]) stats.googleTTS[monthStr] = {};
-    const monthData = stats.googleTTS[monthStr];
+    if (!stats.azure) stats.azure = {};
+    if (!stats.azure[monthStr]) stats.azure[monthStr] = {};
+    const monthData = stats.azure[monthStr];
     if (!monthData[dateStr]) {
       monthData[dateStr] = {
         calls: 0,
@@ -70,7 +70,7 @@ export class AudioUsageTracker {
     if (!dayStats.voices[voice]) dayStats.voices[voice] = 0;
     dayStats.voices[voice]++;
     
-    this.saveGoogleTTSUsage(usage);
+    this.saveAzureUsage(usage);
     this.saveDetailedStats(stats);
   }
 
@@ -117,36 +117,23 @@ export class AudioUsageTracker {
     this.saveDetailedStats(stats);
   }
 
-  // Get Google TTS usage stats
-  getGoogleTTSUsage() {
-    const stored = localStorage.getItem(this.googleTTSUsageKey);
+  // Get Azure usage stats
+  getAzureUsage() {
+    const stored = localStorage.getItem(this.azureUsageKey);
     if (!stored) {
       return {
         monthlyUsage: 0,
         dailyUsage: 0,
         lastUsed: null,
-        monthlyLimit: 4000000, // Google TTS free tier: 4M characters/month
-        dailyLimit: 133333,    // ~4M/30 days
+        monthlyLimit: 450000,
+        dailyLimit: 15000,
         lastReset: new Date().toISOString()
       };
     }
     
-    try {
-      const usage = JSON.parse(stored);
-      this.checkAndResetUsage(usage);
-      return usage;
-    } catch (error) {
-      console.error('Failed to parse Google TTS usage data:', error);
-      // Return default usage if parsing fails
-      return {
-        monthlyUsage: 0,
-        dailyUsage: 0,
-        lastUsed: null,
-        monthlyLimit: 4000000,
-        dailyLimit: 133333,
-        lastReset: new Date().toISOString()
-      };
-    }
+    const usage = JSON.parse(stored);
+    this.checkAndResetUsage(usage);
+    return usage;
   }
 
   // Get Web Speech usage stats
@@ -161,37 +148,20 @@ export class AudioUsageTracker {
       };
     }
     
-    try {
-      const usage = JSON.parse(stored);
-      this.checkAndResetUsage(usage);
-      return usage;
-    } catch (error) {
-      console.error('Failed to parse Web Speech usage data:', error);
-      return {
-        monthlyUsage: 0,
-        dailyUsage: 0,
-        lastUsed: null,
-        lastReset: new Date().toISOString()
-      };
-    }
+    const usage = JSON.parse(stored);
+    this.checkAndResetUsage(usage);
+    return usage;
   }
 
   // Get detailed statistics
   getDetailedStats(): DetailedStats {
     const stored = localStorage.getItem(this.audioStatsKey);
-    if (!stored) return { googleTTS: {}, webSpeech: {} };
-    
-    try {
-      return JSON.parse(stored);
-    } catch (error) {
-      console.error('Failed to parse detailed audio stats:', error);
-      return { googleTTS: {}, webSpeech: {} };
-    }
+    return stored ? JSON.parse(stored) : { azure: {}, webSpeech: {} };
   }
 
-  // Save Google TTS usage
-  private saveGoogleTTSUsage(usage: any) {
-    localStorage.setItem(this.googleTTSUsageKey, JSON.stringify(usage));
+  // Save Azure usage
+  private saveAzureUsage(usage: any) {
+    localStorage.setItem(this.azureUsageKey, JSON.stringify(usage));
   }
 
   // Save Web Speech usage
@@ -225,7 +195,7 @@ export class AudioUsageTracker {
 
   // Get usage statistics for admin dashboard
   getUsageStats() {
-    const googleTTSUsage = this.getGoogleTTSUsage();
+    const azureUsage = this.getAzureUsage();
     const webSpeechUsage = this.getWebSpeechUsage();
     const detailedStats = this.getDetailedStats();
     
@@ -234,11 +204,11 @@ export class AudioUsageTracker {
     const thisMonth = now.toISOString().substring(0, 7);
     
     // Calculate today's stats
-    const googleTTSToday = detailedStats.googleTTS?.[thisMonth]?.[today] || { calls: 0, characters: 0, errors: 0 };
+    const azureToday = detailedStats.azure?.[thisMonth]?.[today] || { calls: 0, characters: 0, errors: 0 };
     const webSpeechToday = detailedStats.webSpeech?.[thisMonth]?.[today] || { calls: 0, characters: 0, errors: 0 };
     
     // Calculate this month's stats
-    const googleTTSThisMonth = Object.values(detailedStats.googleTTS?.[thisMonth] || {}).reduce((total: any, day: any) => ({
+    const azureThisMonth = Object.values(detailedStats.azure?.[thisMonth] || {}).reduce((total: any, day: any) => ({
       calls: total.calls + day.calls,
       characters: total.characters + day.characters,
       errors: total.errors + day.errors
@@ -251,16 +221,16 @@ export class AudioUsageTracker {
     }), { calls: 0, characters: 0, errors: 0 });
     
     return {
-      googleTTS: {
-        today: googleTTSToday,
-        thisMonth: googleTTSThisMonth,
-        monthlyUsage: googleTTSUsage.monthlyUsage,
-        dailyUsage: googleTTSUsage.dailyUsage,
-        monthlyLimit: googleTTSUsage.monthlyLimit,
-        dailyLimit: googleTTSUsage.dailyLimit,
-        usagePercentage: (googleTTSUsage.monthlyUsage / googleTTSUsage.monthlyLimit) * 100,
-        estimatedCost: googleTTSUsage.monthlyUsage > 4000000 ? 
-          ((googleTTSUsage.monthlyUsage - 4000000) / 1000000) * 4 : 0
+      azure: {
+        today: azureToday,
+        thisMonth: azureThisMonth,
+        monthlyUsage: azureUsage.monthlyUsage,
+        dailyUsage: azureUsage.dailyUsage,
+        monthlyLimit: azureUsage.monthlyLimit,
+        dailyLimit: azureUsage.dailyLimit,
+        usagePercentage: (azureUsage.monthlyUsage / azureUsage.monthlyLimit) * 100,
+        estimatedCost: azureUsage.monthlyUsage > 500000 ? 
+          ((azureUsage.monthlyUsage - 500000) / 1000000) * 4 : 0
       },
       webSpeech: {
         today: webSpeechToday,
@@ -274,12 +244,12 @@ export class AudioUsageTracker {
   // Export usage data for admin
   exportUsageData() {
     const stats = this.getDetailedStats();
-    const googleTTSUsage = this.getGoogleTTSUsage();
+    const azureUsage = this.getAzureUsage();
     const webSpeechUsage = this.getWebSpeechUsage();
     
     const exportData = {
       exportDate: new Date().toISOString(),
-      googleTTSUsage,
+      azureUsage,
       webSpeechUsage,
       detailedStats: stats
     };
@@ -296,7 +266,7 @@ export class AudioUsageTracker {
 
   // Clear all usage data (for testing or reset)
   clearUsageData() {
-    localStorage.removeItem(this.googleTTSUsageKey);
+    localStorage.removeItem(this.azureUsageKey);
     localStorage.removeItem(this.webSpeechUsageKey);
     localStorage.removeItem(this.audioStatsKey);
   }

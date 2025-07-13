@@ -57,7 +57,7 @@ const HSK1FlashcardApp = () => {
     audioEnabled: boolean;
     audioAutoPlay: boolean;
     audioSpeed: number;
-    audioVoiceGender: 'female' | 'male';
+    voiceGender: 'auto' | 'female' | 'male';
   };
 
   const defaultSettings: SessionSettings = {
@@ -79,7 +79,7 @@ const HSK1FlashcardApp = () => {
     audioEnabled: true,
     audioAutoPlay: false,
     audioSpeed: 0.7,
-    audioVoiceGender: 'female'
+    voiceGender: 'auto'
   };
 
   const [isLoadingData, setIsLoadingData] = useState(true);
@@ -96,11 +96,6 @@ const HSK1FlashcardApp = () => {
   const [sessionElapsed, setSessionElapsed] = useState<number>(0);
   const [totalLearningTime, setTotalLearningTime] = useState<number>(0);
   const [kpiFilter, setKpiFilter] = useState<number[]>([1, 2, 3]); // Filter for KPI display
-
-  // Helper function to get Google TTS voice based on gender preference
-  const getVoiceForGender = (gender: 'female' | 'male'): string => {
-    return gender === 'female' ? 'zh-CN-Neural2-A' : 'zh-CN-Neural2-B';
-  };
 
   // Initialize word states from HSK1 data
   const initializeWordStates = () => {
@@ -1040,8 +1035,7 @@ const HSK1FlashcardApp = () => {
                         size="lg"
                         variant="secondary"
                         rate={sessionSettings.audioSpeed}
-                        audioService="google-tts"
-                        voice={getVoiceForGender(sessionSettings.audioVoiceGender)}
+                        voiceGender={sessionSettings.voiceGender}
                         className="flex-shrink-0"
                       />
                     )}
@@ -1075,8 +1069,7 @@ const HSK1FlashcardApp = () => {
                         variant="secondary"
                         rate={sessionSettings.audioSpeed}
                         autoPlay={sessionSettings.audioAutoPlay}
-                        audioService="google-tts"
-                        voice={getVoiceForGender(sessionSettings.audioVoiceGender)}
+                        voiceGender={sessionSettings.voiceGender}
                         className="flex-shrink-0"
                       />
                     )}
@@ -1732,37 +1725,25 @@ const HSK1FlashcardApp = () => {
                           {/* Voice Gender Selection */}
                           <div>
                             <label className="block text-sm text-gray-300 mb-2">
-                              Voice
+                              Voice Type
                             </label>
-                            <div className="grid grid-cols-2 gap-3">
+                            <div className="grid grid-cols-3 gap-2">
                               {[
-                                { 
-                                  value: 'female', 
-                                  label: 'Female', 
-                                  emoji: '👩', 
-                                  description: 'Natural female voice' 
-                                },
-                                { 
-                                  value: 'male', 
-                                  label: 'Male', 
-                                  emoji: '👨', 
-                                  description: 'Natural male voice' 
-                                }
-                              ].map((gender) => (
+                                { value: 'auto', label: 'Auto', emoji: '🤖' },
+                                { value: 'female', label: 'Female', emoji: '👩' },
+                                { value: 'male', label: 'Male', emoji: '👨' }
+                              ].map((option) => (
                                 <button
-                                  key={gender.value}
-                                  onClick={() => setSessionSettings({...sessionSettings, audioVoiceGender: gender.value as 'female' | 'male'})}
-                                  className={`p-3 rounded-lg border-2 transition-all text-left ${
-                                    sessionSettings.audioVoiceGender === gender.value
+                                  key={option.value}
+                                  onClick={() => setSessionSettings({...sessionSettings, voiceGender: option.value as 'auto' | 'female' | 'male'})}
+                                  className={`p-3 rounded-lg border-2 transition-all ${
+                                    sessionSettings.voiceGender === option.value
                                       ? 'border-orange-500 bg-orange-500/20 text-orange-100'
                                       : 'border-gray-600 bg-gray-700/30 text-gray-300 hover:border-gray-500'
                                   }`}
                                 >
-                                  <div className="flex items-center gap-2 mb-1">
-                                    <span className="text-lg">{gender.emoji}</span>
-                                    <span className="font-medium">{gender.label}</span>
-                                  </div>
-                                  <div className="text-xs text-gray-400">{gender.description}</div>
+                                  <div className="text-lg mb-1">{option.emoji}</div>
+                                  <div className="text-xs font-medium">{option.label}</div>
                                 </button>
                               ))}
                             </div>
@@ -1777,12 +1758,11 @@ const HSK1FlashcardApp = () => {
                                 size="sm"
                                 variant="primary"
                                 rate={sessionSettings.audioSpeed}
-                                audioService="google-tts"
-                                voice={getVoiceForGender(sessionSettings.audioVoiceGender)}
+                                voiceGender={sessionSettings.voiceGender}
                               />
                             </div>
                             <p className="text-xs text-gray-400 mt-1">
-                              High-quality AI voice with automatic fallback
+                              Click to test pronunciation with "你好" (Hello)
                             </p>
                           </div>
                         </>

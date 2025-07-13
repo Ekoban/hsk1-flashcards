@@ -6,6 +6,7 @@ interface SpeechSynthesisHookOptions {
   rate?: number;
   pitch?: number;
   volume?: number;
+  voiceGender?: 'auto' | 'female' | 'male';
 }
 
 interface SpeechSynthesisHook {
@@ -66,12 +67,32 @@ export const useSpeechSynthesis = (): SpeechSynthesisHook => {
       );
       
       if (chineseVoices.length > 0) {
-        // Use the first available Chinese voice
-        const chosenVoice = chineseVoices[0];
+        let preferredVoice = null;
+        
+        if (options.voiceGender === 'female') {
+          // Look for female indicators in voice names
+          preferredVoice = chineseVoices.find(voice => 
+            voice.name.toLowerCase().includes('female') ||
+            voice.name.toLowerCase().includes('woman') ||
+            voice.name.toLowerCase().includes('mei') ||
+            voice.name.toLowerCase().includes('lily') ||
+            voice.name.toLowerCase().includes('xiao')
+          );
+        } else if (options.voiceGender === 'male') {
+          // Look for male indicators in voice names
+          preferredVoice = chineseVoices.find(voice => 
+            voice.name.toLowerCase().includes('male') ||
+            voice.name.toLowerCase().includes('man') ||
+            voice.name.toLowerCase().includes('wang') ||
+            voice.name.toLowerCase().includes('yun')
+          );
+        }
+        
+        // Use preferred voice if found, otherwise use first available Chinese voice
+        const chosenVoice = preferredVoice || chineseVoices[0];
         if (chosenVoice) {
           utterance.voice = chosenVoice;
           selectedVoice = chosenVoice.name;
-          console.log(`✅ Selected voice: ${chosenVoice.name}`);
         }
       }
     }
