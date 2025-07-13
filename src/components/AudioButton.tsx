@@ -27,7 +27,7 @@ const AudioButton: React.FC<AudioButtonProps> = ({
   const { speak, isSupported, isSpeaking } = useSpeechSynthesis();
   const azureSpeech = useAzureSpeech();
 
-  const handleSpeak = async () => {
+  const handleSpeak = React.useCallback(async () => {
     if (disabled || !text) return;
     
     // Try Azure first, fallback to Web Speech API
@@ -37,18 +37,26 @@ const AudioButton: React.FC<AudioButtonProps> = ({
       // Fallback to Web Speech API
       speak(text, { rate });
     }
-  };
+  }, [disabled, text, rate, isSupported, speak]);
 
-  // Auto-play when text changes (if enabled)
+  // Auto-play when text changes (if enabled) - Use a ref to prevent infinite loops
+  const autoPlayRef = React.useRef(autoPlay);
+  const textRef = React.useRef(text);
+  
   React.useEffect(() => {
-    if (autoPlay && text && !disabled) {
+    autoPlayRef.current = autoPlay;
+    textRef.current = text;
+  });
+
+  React.useEffect(() => {
+    if (autoPlayRef.current && textRef.current && !disabled) {
       const timer = setTimeout(() => {
         handleSpeak();
       }, 300); // Small delay to avoid conflicts
 
       return () => clearTimeout(timer);
     }
-  }, [text, autoPlay, disabled]);
+  }, [text, handleSpeak]); // Only depend on text and handleSpeak
 
   const handleClick = () => {
     if (!disabled && text) {
