@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import AudioUsageTracker from '../services/audioUsageTracker';
 
 interface SpeechSynthesisHookOptions {
   lang?: string;
@@ -56,6 +57,7 @@ export const useSpeechSynthesis = (): SpeechSynthesisHook => {
     utterance.volume = options.volume ?? 1;
 
     // Try to find a Chinese voice if available
+    let selectedVoice = null;
     if (voices.length > 0) {
       const chineseVoice = voices.find(voice => 
         voice.lang.includes('zh') || 
@@ -64,6 +66,7 @@ export const useSpeechSynthesis = (): SpeechSynthesisHook => {
       );
       if (chineseVoice) {
         utterance.voice = chineseVoice;
+        selectedVoice = chineseVoice.name;
       }
     }
 
@@ -74,11 +77,17 @@ export const useSpeechSynthesis = (): SpeechSynthesisHook => {
 
     utterance.onend = () => {
       setIsSpeaking(false);
+      // Track successful usage
+      const tracker = AudioUsageTracker.getInstance();
+      tracker.trackWebSpeechUsage(text, selectedVoice || 'default', true);
     };
 
     utterance.onerror = (event) => {
       console.warn('Speech synthesis error:', event.error);
       setIsSpeaking(false);
+      // Track failed usage
+      const tracker = AudioUsageTracker.getInstance();
+      tracker.trackWebSpeechUsage(text, selectedVoice || 'default', false);
     };
 
     utterance.onpause = () => {

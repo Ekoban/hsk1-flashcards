@@ -3,9 +3,13 @@ import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { createUserProfile, migrateLocalStorageData } from './services/dataService';
 import HSK1FlashcardApp from './components/HSK1FlashcardApp';
 import LandingPage from './components/LandingPage';
+import AdminRoute from './components/AdminRoute';
 
 const AppContent = () => {
   const { currentUser, loading, isGuestMode } = useAuth();
+
+  // Check if current URL is admin route
+  const isAdminRoute = window.location.pathname === '/admin' || window.location.search.includes('admin=true');
 
   useEffect(() => {
     const handleUserLogin = async () => {
@@ -30,6 +34,11 @@ const AppContent = () => {
         </div>
       </div>
     );
+  }
+
+  // Show admin route if requested
+  if (isAdminRoute) {
+    return <AdminRoute />;
   }
 
   // Show app if user is logged in OR in guest mode

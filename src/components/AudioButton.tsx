@@ -1,6 +1,7 @@
 import React from 'react';
 import { Volume2, VolumeX, AlertCircle } from 'lucide-react';
-import useSpeechSynthesis from '../hooks/useSpeechSynthesis';
+import { useSpeechSynthesis } from '../hooks/useSpeechSynthesis';
+import { useAzureSpeech } from '../hooks/useAzureSpeech';
 
 interface AudioButtonProps {
   text: string;
@@ -24,21 +25,34 @@ const AudioButton: React.FC<AudioButtonProps> = ({
   autoPlay = false
 }) => {
   const { speak, isSupported, isSpeaking } = useSpeechSynthesis();
+  const azureSpeech = useAzureSpeech();
+
+  const handleSpeak = async () => {
+    if (disabled || !text) return;
+    
+    // Try Azure first, fallback to Web Speech API
+    const azureSuccess = await azureSpeech.speakWithAzure(text, rate);
+    
+    if (!azureSuccess && isSupported) {
+      // Fallback to Web Speech API
+      speak(text, { rate });
+    }
+  };
 
   // Auto-play when text changes (if enabled)
   React.useEffect(() => {
-    if (autoPlay && isSupported && text && !disabled) {
+    if (autoPlay && text && !disabled) {
       const timer = setTimeout(() => {
-        speak(text, { rate });
+        handleSpeak();
       }, 300); // Small delay to avoid conflicts
 
       return () => clearTimeout(timer);
     }
-  }, [text, autoPlay, isSupported, disabled, speak, rate]);
+  }, [text, autoPlay, disabled]);
 
   const handleClick = () => {
     if (!disabled && text) {
-      speak(text, { rate });
+      handleSpeak();
     }
   };
 
@@ -62,7 +76,9 @@ const AudioButton: React.FC<AudioButtonProps> = ({
     ghost: 'bg-white/10 hover:bg-white/20 text-gray-300 hover:text-white'
   };
 
-  if (!isSupported) {
+  const isLoading = isSpeaking || azureSpeech.isLoading;
+
+  if (!isSupported && !azureSpeech.canUseAzure(text?.length || 0)) {
     return (
       <div 
         className={`${sizeClasses[size]} rounded-full bg-gray-600/50 flex items-center justify-center cursor-not-allowed ${className}`}
@@ -76,7 +92,7 @@ const AudioButton: React.FC<AudioButtonProps> = ({
   return (
     <button
       onClick={handleClick}
-      disabled={disabled || isSpeaking || !text}
+      disabled={disabled || isLoading || !text}
       className={`
         ${sizeClasses[size]} 
         ${variantClasses[variant]}
@@ -93,7 +109,7 @@ const AudioButton: React.FC<AudioButtonProps> = ({
       title={tooltip}
       aria-label={`Play pronunciation for ${text}`}
     >
-      {isSpeaking ? (
+      {isLoading ? (
         <VolumeX 
           size={iconSizes[size]} 
           className="animate-pulse" 

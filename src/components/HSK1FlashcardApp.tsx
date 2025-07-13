@@ -5,6 +5,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { saveUserProgress, getUserProgress, saveUserSettings, getUserSettings } from '../services/dataService';
 import hskDatabaseRaw from '../data/hsk-database.json';
 import AudioButton from './AudioButton';
+import AzureUsageStats from './AzureUsageStats';
 
 // Ensure we have the correct data structure and handle JSON import properly
 const hsk1Words = Array.isArray(hskDatabaseRaw) ? hskDatabaseRaw : (hskDatabaseRaw as any).default || [];
@@ -1734,6 +1735,9 @@ const HSK1FlashcardApp = () => {
                               Click to test pronunciation with "你好" (Hello)
                             </p>
                           </div>
+                          
+                          {/* Azure Usage Statistics */}
+                          <AzureUsageStats />
                         </>
                       )}
                     </div>
