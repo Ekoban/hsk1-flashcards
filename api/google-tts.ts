@@ -197,7 +197,7 @@ function calculateCost(voice: string, characters: number): number {
 }
 
 // Helper function to validate voice name
-export function isValidVoice(voice: string): boolean {
+function isValidVoice(voice: string): boolean {
   const validVoices = [
     'zh-CN-Standard-A', 'zh-CN-Standard-B', 'zh-CN-Standard-C', 'zh-CN-Standard-D',
     'zh-CN-Wavenet-A', 'zh-CN-Wavenet-B', 'zh-CN-Wavenet-C', 'zh-CN-Wavenet-D',
