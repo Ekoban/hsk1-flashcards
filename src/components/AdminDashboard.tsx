@@ -58,22 +58,22 @@ const AdminDashboard: React.FC = () => {
   const [isAdminUser, setIsAdminUser] = useState(false);
   const [needsSignIn, setNeedsSignIn] = useState(false);
 
-  // Admin email for security check
-  const ADMIN_EMAIL = 'robinet.Alexandre@gmail.com';
-
   useEffect(() => {
     // Set up auth state listener
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
         setAuthenticated(true);
-        // Check if this is the admin user
-        if (user.email === ADMIN_EMAIL) {
+        // Check if this is the admin user via environment variable
+        const adminEmail = import.meta.env.VITE_ADMIN_EMAIL;
+        console.log('Checking admin access for:', user.email, 'Admin email:', adminEmail);
+        
+        if (user.email === adminEmail) {
           setIsAdminUser(true);
           setNeedsSignIn(false);
           loadAllStats(); // Load stats only for admin
         } else {
           setIsAdminUser(false);
-          setError(`Access denied. Only ${ADMIN_EMAIL} can access admin dashboard.`);
+          setError('Access denied. Admin privileges required.');
           setLoading(false);
         }
       } else {
@@ -92,10 +92,13 @@ const AdminDashboard: React.FC = () => {
       setLoading(true);
       setError(null);
       const provider = new GoogleAuthProvider();
+      provider.setCustomParameters({
+        prompt: 'select_account'
+      });
       await signInWithPopup(auth, provider);
     } catch (err) {
       console.error('Sign in error:', err);
-      setError('Failed to sign in with Google');
+      setError('Failed to sign in with Google. Please try again.');
       setLoading(false);
     }
   };
@@ -120,7 +123,8 @@ const AdminDashboard: React.FC = () => {
       }
 
       // Double-check email for security
-      if (auth.currentUser.email !== ADMIN_EMAIL) {
+      const adminEmail = import.meta.env.VITE_ADMIN_EMAIL;
+      if (auth.currentUser.email !== adminEmail) {
         setError('Access denied: Invalid admin credentials');
         return;
       }
@@ -355,7 +359,7 @@ const AdminDashboard: React.FC = () => {
           <div className="text-center">
             <h1 className="text-3xl font-bold text-white mb-4">🛠️ Admin Access</h1>
             <p className="text-gray-300 mb-6">
-              Admin dashboard access is restricted to authorized users only.
+              This dashboard requires administrator authentication. Please sign in with your authorized Google account.
             </p>
             <button
               onClick={handleGoogleSignIn}
@@ -370,7 +374,7 @@ const AdminDashboard: React.FC = () => {
               Sign in with Google
             </button>
             <p className="text-xs text-gray-400 mt-4">
-              Only robinet.Alexandre@gmail.com is authorized
+              Restricted to authorized administrators only
             </p>
           </div>
         </div>
